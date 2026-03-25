@@ -613,11 +613,17 @@ async def agent_stream(request: Request, current_user: dict = Depends(get_curren
         is_creation = _is_creation_request(user_input)
         has_briefing = _has_pending_briefing(history)
         is_confirm = _is_confirmation(user_input)
+        # Se há briefing pendente e o usuário não está pedindo uma nova criação,
+        # qualquer resposta é tratada como confirmação (usuário respondeu as perguntas do Hélio)
+        _is_negative = any(w in user_input.lower() for w in ["não quero", "nao quero", "cancela", "esquece", "para tudo"])
+        if has_briefing and not is_creation and not _is_negative:
+            is_confirm = True
         print(f"[ROUTE] is_creation={is_creation} has_briefing={has_briefing} is_confirm={is_confirm}")
 
         if is_confirm and has_briefing:
-            full_prompt = ("⚡ BRIEFING JÁ CONFIRMADO PELO USUÁRIO — EXECUTE O PIPELINE IMEDIATAMENTE. "
-                           "NÃO APRESENTE NOVO BRIEFING. INICIE DIRETAMENTE A FASE 1 COM LUNA.\n\n") + full_prompt
+            full_prompt = ("⚡ BRIEFING CONCLUÍDO — O usuário respondeu às perguntas de planejamento e confirmou. "
+                           "EXECUTE O PIPELINE IMEDIATAMENTE. NÃO FAÇA MAIS PERGUNTAS. "
+                           "INICIE DIRETAMENTE A FASE 1 COM LUNA.\n\n") + full_prompt
 
         # Briefing semanal on-demand — intercepta antes de despachar para o time
         _BRIEFING_KW = [
