@@ -1,0 +1,38 @@
+[
+  {
+    "id": "zlfpp9zx4",
+    "name": "Ideal Marketing",
+    "description": "Seu espaço de trabalho pessoal",
+    "owner_id": "c7p3vy4y0",
+    "credits": 1000,
+    "plan": "starter",
+    "created_at": 1772811511234
+  },
+  {
+    "id": "0dx969bd1",
+    "name": "Ideal Marketing",
+    "description": "Seu espaço de trabalho pessoal",
+    "owner_id": "w6i9a8tw9",
+    "credits": 1000,
+    "plan": "starter",
+    "created_at": 1772811616045
+  },
+  {
+    "id": "uj1uz5fjs",
+    "name": "Lucas Bevilacqua's Workspace",
+    "description": "Seu espaço de trabalho pessoal",
+    "owner_id": "kzzgqgjmh",
+    "credits": 1000,
+    "plan": "starter",
+    "created_at": 1772811891273
+  },
+  {
+    "id": "1de3ogbyk",
+    "name": "Ideal Marketing",
+    "description": "Seu espaço de trabalho pessoal",
+    "owner_id": "pwlc6s0qc",
+    "credits": 1000,
+    "plan": "starter",
+    "created_at": 1772812160952
+  }
+]

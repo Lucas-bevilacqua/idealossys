@@ -1,0 +1,1398 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ideal OS — Sua Empresa no Automático</title>
+<meta name="description" content="8 agentes especializados trabalham em equipe para transformar sua visão em produto real — análise, design, código e deploy em minutos.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ─── TOKENS ──────────────────────────────────────────────── */
+:root {
+  --bg:        #020202;
+  --surface:   #111318;
+  --border:    rgba(48, 54, 61, 0.5);
+  --text-main: #F0F6FC;
+  --text-dim:  #8B949E;
+  --accent:    #3B82F6;
+  --accent-glow: rgba(59,130,246,0.15);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text-main);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
+}
+
+/* ─── TYPOGRAPHY ─────────────────────────────────────────── */
+.font-heading { font-family: 'Outfit', sans-serif; letter-spacing: -0.02em; }
+.label-mono   { font-family: 'JetBrains Mono', monospace; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--text-dim); font-weight: 600; }
+
+@keyframes shine {
+  from { background-position: -200% center; }
+  to   { background-position:  200% center; }
+}
+.text-shiny {
+  background: linear-gradient(to right, #fff 20%, #3B82F6 40%, #3B82F6 60%, #fff 80%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shine 5s linear infinite;
+}
+.text-accent { color: var(--accent); }
+.text-dim    { color: var(--text-dim); }
+
+/* ─── SCROLLBAR ──────────────────────────────────────────── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
+
+/* ─── ANIMATED BACKGROUND ────────────────────────────────── */
+#bg-canvas { position:fixed; inset:0; z-index:0; pointer-events:none; opacity:.4; }
+
+.bg-orb {
+  position: fixed;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(120px);
+  z-index: 0;
+}
+.bg-orb-1 {
+  top: -10%; left: -5%;
+  width: 50vw; height: 50vh;
+  background: radial-gradient(circle, rgba(59,130,246,0.2), transparent 70%);
+  animation: orbFloat1 15s ease-in-out infinite;
+}
+.bg-orb-2 {
+  bottom: -10%; right: -5%;
+  width: 50vw; height: 50vh;
+  background: radial-gradient(circle, rgba(59,130,246,0.1), transparent 70%);
+  animation: orbFloat2 18s ease-in-out infinite 2s;
+}
+@keyframes orbFloat1 {
+  0%,100%{transform:translate(0,0) scale(1);opacity:.2}
+  50%    {transform:translate(50px,30px) scale(1.2);opacity:.4}
+}
+@keyframes orbFloat2 {
+  0%,100%{transform:translate(0,0) scale(1);opacity:.1}
+  50%    {transform:translate(-40px,-20px) scale(1.1);opacity:.3}
+}
+.bg-grid {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .04;
+  background-image:
+    linear-gradient(0deg, transparent 24%, rgba(59,130,246,.15) 25%, rgba(59,130,246,.15) 26%, transparent 27%, transparent 74%, rgba(59,130,246,.15) 75%, rgba(59,130,246,.15) 76%, transparent 77%),
+    linear-gradient(90deg, transparent 24%, rgba(59,130,246,.15) 25%, rgba(59,130,246,.15) 26%, transparent 27%, transparent 74%, rgba(59,130,246,.15) 75%, rgba(59,130,246,.15) 76%, transparent 77%);
+  background-size: 60px 60px;
+  animation: gridMove 20s linear infinite;
+}
+@keyframes gridMove { to { background-position: 60px 60px; } }
+.bg-scanline {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none; opacity: .02;
+  background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,.25) 50%), linear-gradient(90deg,rgba(255,0,0,.06),rgba(0,255,0,.02),rgba(0,0,255,.06));
+  background-size: 100% 4px, 3px 100%;
+}
+
+/* ─── LAYOUT ─────────────────────────────────────────────── */
+.container { max-width: 1280px; margin: 0 auto; padding: 0 2rem; position: relative; z-index: 10; }
+section { position: relative; z-index: 10; }
+
+/* ─── NAVBAR ─────────────────────────────────────────────── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; height: 80px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; z-index: 100;
+  transition: background .3s, border-color .3s, backdrop-filter .3s;
+  border-bottom: 1px solid transparent;
+}
+nav.scrolled {
+  background: rgba(2,2,2,.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+  text-transform: uppercase;
+  color: var(--text-main);
+  line-height: 1;
+  text-decoration: none;
+}
+.nav-logo em { font-weight: 300; font-style: italic; }
+.nav-links { display: flex; align-items: center; gap: 2.5rem; }
+.nav-links a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .2em;
+  color: var(--text-dim); text-decoration: none;
+  transition: color .2s;
+}
+.nav-links a:hover { color: var(--accent); }
+.btn-nav {
+  padding: .75rem 2rem; border-radius: 9999px;
+  background: var(--accent); color: #fff;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .2em;
+  border: none; cursor: pointer; text-decoration: none;
+  transition: filter .2s, transform .2s;
+  box-shadow: 0 0 24px var(--accent-glow);
+}
+.btn-nav:hover { filter: brightness(1.15); transform: scale(1.04); }
+
+/* ─── HERO ───────────────────────────────────────────────── */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; padding: 6rem 2rem 4rem;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: .75rem;
+  padding: .5rem 1.25rem; border-radius: 9999px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.1);
+  backdrop-filter: blur(12px);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .4em;
+  color: var(--accent); margin-bottom: 3rem;
+}
+.pulse-dot {
+  position: relative; display: flex;
+  width: 8px; height: 8px;
+}
+.pulse-dot span:first-child {
+  position: absolute; inset: 0; border-radius: 50%;
+  background: var(--accent); opacity: .75;
+  animation: ping 2s cubic-bezier(0,0,.2,1) infinite;
+}
+.pulse-dot span:last-child {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--accent); position: relative;
+}
+@keyframes ping { 75%,100%{transform:scale(2);opacity:0} }
+
+.hero h1 {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: clamp(3rem, 10vw, 8rem);
+  letter-spacing: -0.03em;
+  line-height: .95;
+  margin-bottom: 1.5rem;
+}
+.hero p {
+  font-size: clamp(1rem, 2vw, 1.375rem);
+  color: var(--text-dim); font-weight: 500;
+  max-width: 720px; margin: 0 auto 2.5rem; line-height: 1.6;
+}
+.hero-ctas { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; margin-bottom: 4rem; }
+.btn-primary {
+  padding: 1.25rem 3rem; border-radius: .75rem;
+  background: #fff; color: #000;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px; font-weight: 900;
+  text-transform: uppercase; letter-spacing: .25em;
+  border: none; cursor: pointer; text-decoration: none;
+  transition: transform .2s, box-shadow .2s;
+  display: inline-flex; align-items: center; gap: .5rem;
+  box-shadow: 0 20px 50px rgba(255,255,255,.08);
+}
+.btn-primary:hover { transform: scale(1.02); }
+.btn-secondary {
+  padding: 1.25rem 3rem; border-radius: .75rem;
+  background: transparent; color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .25em;
+  border: 1px solid rgba(255,255,255,.12); cursor: pointer; text-decoration: none;
+  transition: background .2s;
+}
+.btn-secondary:hover { background: rgba(255,255,255,.05); }
+
+/* ─── STATS ──────────────────────────────────────────────── */
+.stats-row {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 1rem; overflow: hidden; max-width: 800px; margin: 0 auto 6rem;
+}
+.stat-cell {
+  background: var(--bg); padding: 2rem 1.5rem; text-align: center;
+}
+.stat-number {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.5rem; font-weight: 900;
+  letter-spacing: -.03em; color: var(--text-main);
+  display: block; line-height: 1;
+}
+.stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .2em;
+  color: var(--text-dim); margin-top: .5rem; display: block;
+}
+
+/* ─── SECTION HEADER ─────────────────────────────────────── */
+.section-header { text-align: center; margin-bottom: 5rem; }
+.section-eyebrow {
+  display: inline-flex; align-items: center; gap: .75rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .4em;
+  color: var(--accent); margin-bottom: 1.5rem;
+}
+.section-eyebrow::before,.section-eyebrow::after {
+  content: ''; width: 24px; height: 1px; background: var(--accent); opacity: .5;
+}
+.section-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(2rem, 5vw, 4.5rem);
+  font-weight: 900; letter-spacing: -.03em;
+  line-height: 1; margin-bottom: 1rem;
+}
+.section-divider {
+  width: 80px; height: 1px;
+  background: linear-gradient(to right, transparent, var(--accent), transparent);
+  margin: 1.5rem auto;
+}
+.section-desc {
+  font-size: 1.125rem; color: var(--text-dim);
+  max-width: 600px; margin: 0 auto; line-height: 1.7;
+}
+
+/* ─── CARD ───────────────────────────────────────────────── */
+.card {
+  position: relative; overflow: hidden;
+  padding: 2rem; border-radius: 1rem;
+  border: 1px solid rgba(255,255,255,.05);
+  background: rgba(255,255,255,.02);
+  backdrop-filter: blur(12px);
+  transition: transform .4s cubic-bezier(.4,0,.2,1), box-shadow .4s, border-color .4s;
+}
+.card:hover {
+  transform: translateY(-8px) scale(1.01);
+  box-shadow: 0 20px 40px rgba(59,130,246,.15);
+  border-color: rgba(59,130,246,.4);
+}
+.card::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(59,130,246,.08), transparent);
+  transform: translateX(-100%);
+  animation: cardSweep 3s linear infinite;
+}
+@keyframes cardSweep { to { transform: translateX(200%); } }
+
+/* ─── PIPELINE ───────────────────────────────────────────── */
+.pipeline {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem; position: relative;
+}
+.pipeline-item {
+  display: flex; flex-direction: column;
+  align-items: center; text-align: center;
+  padding: 2rem 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255,255,255,.05);
+  background: rgba(255,255,255,.02);
+  transition: transform .3s, box-shadow .3s, border-color .3s;
+  position: relative; overflow: hidden;
+}
+.pipeline-item:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 32px rgba(59,130,246,.12);
+  border-color: rgba(59,130,246,.3);
+}
+.pipeline-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .3em;
+  color: var(--accent); margin-bottom: 1rem;
+}
+.pipeline-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem; font-weight: 900;
+  margin: 0 auto 1rem;
+  border: 1px solid rgba(255,255,255,.1);
+}
+.pipeline-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem; font-weight: 800;
+  letter-spacing: -.01em; margin-bottom: .25rem;
+}
+.pipeline-role {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .2em;
+  color: var(--text-dim);
+}
+.pipeline-phase-label {
+  margin-top: 1rem;
+  font-size: .75rem; color: var(--text-dim);
+  line-height: 1.4; padding: 0 .5rem;
+}
+
+/* ─── AGENTS GRID ────────────────────────────────────────── */
+.agents-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; }
+.agent-card { padding: 1.75rem; }
+.agent-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 1rem; font-weight: 900; color: #fff;
+  margin-bottom: 1rem;
+}
+.agent-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem; font-weight: 800;
+  margin-bottom: .15rem;
+}
+.agent-dept {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .2em;
+  padding: .25rem .6rem; border-radius: .25rem;
+  display: inline-block; margin-bottom: .75rem;
+}
+.agent-desc {
+  font-size: .8rem; color: var(--text-dim);
+  line-height: 1.5; margin-bottom: .75rem;
+}
+.agent-tools { list-style: none; }
+.agent-tools li {
+  font-size: .7rem; color: var(--text-dim);
+  padding: .2rem 0;
+  display: flex; align-items: center; gap: .5rem;
+}
+.agent-tools li::before {
+  content: ''; width: 4px; height: 4px;
+  border-radius: 50%; background: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ─── FEATURES GRID ──────────────────────────────────────── */
+.features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+.feat-icon {
+  width: 44px; height: 44px; border-radius: .75rem;
+  background: rgba(59,130,246,.1);
+  border: 1px solid rgba(59,130,246,.2);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1.25rem;
+}
+.feat-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem; font-weight: 700;
+  margin-bottom: .5rem;
+}
+.feat-desc { font-size: .8rem; color: var(--text-dim); line-height: 1.6; }
+
+/* ─── TOOLS GRID ─────────────────────────────────────────── */
+.tools-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.tool-item {
+  padding: 1.25rem;
+  border-radius: .75rem;
+  border: 1px solid rgba(255,255,255,.05);
+  background: rgba(255,255,255,.02);
+  transition: border-color .3s, background .3s;
+}
+.tool-item:hover { border-color: rgba(59,130,246,.3); background: rgba(59,130,246,.04); }
+.tool-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  color: var(--accent); margin-bottom: .4rem;
+  text-transform: uppercase; letter-spacing: .1em;
+}
+.tool-desc { font-size: .7rem; color: var(--text-dim); line-height: 1.5; }
+
+/* ─── STACK ──────────────────────────────────────────────── */
+.stack-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2rem; }
+.stack-col-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .3em;
+  color: var(--accent); margin-bottom: 1.5rem;
+  padding-bottom: .75rem;
+  border-bottom: 1px solid rgba(59,130,246,.2);
+}
+.stack-item {
+  display: flex; align-items: center; gap: .75rem;
+  padding: .75rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+}
+.stack-item:last-child { border-bottom: none; }
+.stack-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+.stack-name { font-size: .875rem; font-weight: 600; }
+.stack-desc { font-size: .7rem; color: var(--text-dim); margin-left: auto; }
+
+/* ─── CTA SECTION ────────────────────────────────────────── */
+.cta-section {
+  padding: 8rem 2rem;
+  text-align: center;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  background: rgba(255,255,255,.01);
+  position: relative; overflow: hidden;
+}
+.cta-section::before {
+  content: '';
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  width: 600px; height: 300px;
+  background: radial-gradient(ellipse, rgba(59,130,246,.12), transparent 70%);
+  pointer-events: none;
+}
+.cta-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(2.5rem, 6vw, 5rem);
+  font-weight: 900; letter-spacing: -.03em; line-height: 1;
+  margin-bottom: 1.5rem;
+}
+.cta-desc {
+  font-size: 1.125rem; color: var(--text-dim);
+  max-width: 500px; margin: 0 auto 2.5rem;
+}
+
+/* ─── FOOTER ─────────────────────────────────────────────── */
+footer {
+  padding: 6rem 2rem 3rem;
+  text-align: center;
+  position: relative; z-index: 10;
+}
+.footer-logo {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2rem; font-weight: 900;
+  letter-spacing: -.02em; text-transform: uppercase;
+  margin-bottom: 1.5rem; display: block;
+}
+.footer-logo em { font-weight: 300; font-style: italic; }
+.footer-logo {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2rem; font-weight: 900;
+  letter-spacing: -.02em; text-transform: uppercase;
+  margin-bottom: 1.25rem; display: block;
+}
+.footer-logo em { font-weight: 300; font-style: italic; }
+.footer-tagline {
+  font-size: .875rem; color: var(--text-dim);
+  max-width: 400px; margin: 0 auto 3rem; line-height: 1.7;
+}
+.footer-links {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 3rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .4em;
+  opacity: .4; margin-bottom: 4rem;
+}
+.footer-links a { color: var(--text-main); text-decoration: none; transition: color .2s; }
+.footer-links a:hover { color: var(--accent); opacity: 1; }
+.footer-copy {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: .6em;
+  text-transform: uppercase; opacity: .2;
+}
+
+/* ─── DEPARTMENTS ────────────────────────────────────────── */
+.depts-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+.dept-card { padding: 2rem; }
+.dept-featured {
+  grid-column: span 3;
+  background: linear-gradient(135deg, rgba(59,130,246,.08), rgba(59,130,246,.02));
+  border-color: rgba(59,130,246,.2);
+}
+.dept-header {
+  display: flex; align-items: flex-start;
+  justify-content: space-between; gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.dept-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.2rem; font-weight: 800;
+  letter-spacing: -.02em; margin-bottom: .6rem;
+}
+.dept-featured .dept-title { font-size: 1.5rem; }
+.dept-agents-row { display: flex; flex-wrap: wrap; gap: .4rem; }
+.dept-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .1em;
+  padding: .2rem .55rem; border-radius: .25rem;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  color: var(--text-dim);
+}
+.dept-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .2em;
+  padding: .3rem .9rem; border-radius: 9999px;
+  flex-shrink: 0;
+}
+.dept-badge-active {
+  background: rgba(16,185,129,.15);
+  color: #34d399;
+  border: 1px solid rgba(16,185,129,.25);
+}
+.dept-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .25em;
+  color: var(--accent); margin-bottom: .75rem;
+}
+.dept-deliverables { list-style: none; }
+.dept-deliverables li {
+  font-size: .8rem; color: var(--text-dim);
+  padding: .4rem 0;
+  border-bottom: 1px solid rgba(255,255,255,.04);
+  display: flex; align-items: center; gap: .6rem;
+  line-height: 1.5;
+}
+.dept-deliverables li:last-child { border-bottom: none; }
+.dept-deliverables li::before {
+  content: '';
+  width: 4px; height: 4px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0;
+}
+.dept-link {
+  display: inline-flex; align-items: center; gap: .4rem;
+  margin-top: 1.25rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .15em;
+  color: var(--accent); text-decoration: none;
+  transition: gap .2s;
+}
+.dept-link:hover { gap: .7rem; }
+
+@media(max-width:1024px){
+  .depts-grid { grid-template-columns: repeat(2, 1fr); }
+  .dept-featured { grid-column: span 2; }
+}
+@media(max-width:640px){
+  .depts-grid { grid-template-columns: 1fr; }
+  .dept-featured { grid-column: span 1; }
+}
+
+/* ─── GRUPO IDEAL TRENDS SECTION ────────────────────────── */
+.git-section {
+  padding: 7rem 0;
+  border-top: 1px solid var(--border);
+  background: rgba(255,255,255,.01);
+}
+.git-inner {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 5rem;
+  align-items: center;
+}
+.git-logo-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
+}
+.git-logo {
+  width: 100%;
+  max-width: 260px;
+  opacity: .9;
+}
+.git-stats {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  justify-content: center;
+  padding: 1.5rem;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: .75rem;
+  background: rgba(255,255,255,.02);
+}
+.git-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .3rem;
+}
+.git-stat-value {
+  display: flex;
+  align-items: baseline;
+  gap: .1rem;
+  line-height: 1;
+}
+.git-stat-num {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.75rem;
+  font-weight: 900;
+  letter-spacing: -.03em;
+  color: var(--text-main);
+  line-height: 1;
+}
+.git-stat-suffix {
+  font-family: 'Outfit', sans-serif;
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1;
+}
+.git-stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .2em;
+  color: var(--text-dim);
+}
+.git-stat-divider {
+  width: 1px;
+  height: 40px;
+  background: var(--border);
+}
+.git-title {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 900;
+  letter-spacing: -.03em;
+  line-height: 1;
+  margin-bottom: .75rem;
+}
+.git-tagline {
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--accent);
+  margin-bottom: 1.5rem;
+  opacity: .8;
+}
+.git-desc {
+  font-size: .9rem;
+  color: var(--text-dim);
+  line-height: 1.75;
+  margin-bottom: 1rem;
+}
+.git-sectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin-top: 1.75rem;
+}
+.git-sector {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .15em;
+  padding: .35rem .8rem;
+  border-radius: .35rem;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+  color: var(--text-dim);
+  transition: border-color .2s, color .2s;
+}
+.git-sector:hover {
+  border-color: rgba(59,130,246,.3);
+  color: var(--text-main);
+}
+@media(max-width:900px){
+  .git-inner { grid-template-columns: 1fr; gap: 3rem; }
+  .git-logo-col { flex-direction: row; flex-wrap: wrap; justify-content: center; }
+  .git-logo { max-width: 180px; }
+}
+
+/* ─── FADE-IN ANIMATION ──────────────────────────────────── */
+.fade-up { opacity: 0; transform: translateY(30px); transition: opacity .7s ease, transform .7s ease; }
+.fade-up.visible { opacity: 1; transform: none; }
+
+/* ─── RESPONSIVE ─────────────────────────────────────────── */
+@media(max-width:1024px){
+  .agents-grid   { grid-template-columns: repeat(2, 1fr); }
+  .tools-grid    { grid-template-columns: repeat(2, 1fr); }
+  .pipeline      { grid-template-columns: repeat(2, 1fr); }
+}
+@media(max-width:768px){
+  .features-grid { grid-template-columns: 1fr; }
+  .stack-grid    { grid-template-columns: 1fr; }
+  .stats-row     { grid-template-columns: repeat(2, 1fr); }
+  .pipeline      { grid-template-columns: 1fr; }
+  .nav-links     { display: none; }
+  .agents-grid   { grid-template-columns: 1fr; }
+  .tools-grid    { grid-template-columns: 1fr 1fr; }
+}
+@media(max-width:480px){
+  .tools-grid    { grid-template-columns: 1fr; }
+  .stats-row     { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+<!-- Background layers -->
+<canvas id="bg-canvas"></canvas>
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+<div class="bg-grid"></div>
+<div class="bg-scanline"></div>
+
+<!-- ════════════════ NAVBAR ════════════════ -->
+<nav id="navbar">
+  <a href="#" class="nav-logo">Ideal <em>OS</em></a>
+  <div class="nav-links">
+    <a href="#departamentos">Departamentos</a>
+    <a href="#pipeline">Como Funciona</a>
+    <a href="#equipe">A Equipe</a>
+    <a href="#resultado">Resultados</a>
+  </div>
+  <a href="/" class="btn-nav">Entrar no Sistema</a>
+</nav>
+
+<!-- ════════════════ HERO ════════════════ -->
+<section class="hero">
+  <div class="hero-badge">
+    <div class="pulse-dot"><span></span><span></span></div>
+    Sua Empresa no Automático
+  </div>
+
+  <h1 class="font-heading">
+    <span style="color:rgba(240,246,252,.9)">Você Comanda.</span><br>
+    <span class="text-shiny">A IA Executa.</span>
+  </h1>
+
+  <p>
+    Imagine ter uma equipe completa de especialistas trabalhando pela sua empresa — sem CLT, sem reunião, sem desculpa.
+    O IdealOS coloca <strong style="color:var(--text-main)">times digitais inteiros</strong> para trabalhar pelo seu negócio, do primeiro rascunho até o resultado na sua mão.
+  </p>
+
+  <div class="hero-ctas">
+    <a href="/" class="btn-primary">
+      Começar Agora
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+    <a href="#departamentos" class="btn-secondary">Ver Departamentos</a>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row fade-up">
+    <div class="stat-cell">
+      <span class="stat-number" data-target="6">0</span>
+      <span class="stat-label">Departamentos</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-number" data-target="16">0</span>
+      <span class="stat-label">Especialistas</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-number" data-target="0">0</span>
+      <span class="stat-label" style="letter-spacing:.1em">Retrabalho</span>
+    </div>
+    <div class="stat-cell">
+      <span class="stat-number" data-target="24">0</span>
+      <span class="stat-label">Horas por Dia</span>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ DEPARTAMENTOS ════════════════ -->
+<section id="departamentos" style="padding:6rem 0;border-top:1px solid var(--border)">
+  <div class="container">
+    <div class="section-header fade-up">
+      <div class="section-eyebrow">Estrutura da Empresa</div>
+      <h2 class="section-title font-heading">
+        Contrate <span class="text-accent">Times Completos.</span><br>
+        <span style="color:rgba(240,246,252,.5)">Que nunca dormem.</span>
+      </h2>
+      <div class="section-divider"></div>
+      <p class="section-desc">
+        Diga o que você precisa. O IdealOS monta o time, distribui o trabalho e entrega o resultado — sem você precisar gerenciar nada.
+      </p>
+    </div>
+
+    <div class="depts-grid fade-up">
+
+      <!-- Engenharia & Produto — destaque -->
+      <div class="card dept-card dept-featured">
+        <div class="dept-header">
+          <div>
+            <div class="dept-title">Tecnologia &amp; Produto</div>
+            <div class="dept-agents-row">
+              <span class="dept-tag">Planejamento</span>
+              <span class="dept-tag">Design Visual</span>
+              <span class="dept-tag">Construção</span>
+              <span class="dept-tag">Revisão</span>
+              <span class="dept-tag">Publicação</span>
+            </div>
+          </div>
+          <span class="dept-badge dept-badge-active">Disponível</span>
+        </div>
+        <p class="dept-eyebrow">O que esse time entrega</p>
+        <ul class="dept-deliverables">
+          <li>Sites, páginas de vendas e sistemas prontos para o seu negócio usar</li>
+          <li>Identidade visual criada do zero com as cores e o estilo da sua empresa</li>
+          <li>Do primeiro rascunho até publicado — sem você precisar entender de tecnologia</li>
+          <li>Servidor configurado e tudo no ar para seus clientes acessarem</li>
+        </ul>
+        <a href="#pipeline" class="dept-link">
+          Ver como esse time trabalha
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+
+      <!-- Crescimento & Marketing -->
+      <div class="card dept-card">
+        <div class="dept-header">
+          <div>
+            <div class="dept-title">Crescimento &amp; Marketing</div>
+            <div class="dept-agents-row">
+              <span class="dept-tag">Estratégia</span>
+              <span class="dept-tag">Texto e Conteúdo</span>
+              <span class="dept-tag">Redes Sociais</span>
+            </div>
+          </div>
+          <span class="dept-badge dept-badge-active">Disponível</span>
+        </div>
+        <p class="dept-eyebrow">O que esse time entrega</p>
+        <ul class="dept-deliverables">
+          <li>Campanhas de anúncio prontas para rodar</li>
+          <li>Páginas que convertem visitantes em clientes</li>
+          <li>Sequências de comunicação que vendem enquanto você dorme</li>
+        </ul>
+      </div>
+
+      <!-- Inteligência de Negócios -->
+      <div class="card dept-card">
+        <div class="dept-header">
+          <div>
+            <div class="dept-title">Inteligência de Negócios</div>
+            <div class="dept-agents-row">
+              <span class="dept-tag">Análise de Mercado</span>
+              <span class="dept-tag">Tendências</span>
+              <span class="dept-tag">Previsões</span>
+            </div>
+          </div>
+          <span class="dept-badge dept-badge-active">Disponível</span>
+        </div>
+        <p class="dept-eyebrow">O que esse time entrega</p>
+        <ul class="dept-deliverables">
+          <li>Visão clara de como sua empresa está performando</li>
+          <li>O que o mercado está fazendo e para onde vai</li>
+          <li>Projeções para você tomar decisões com mais segurança</li>
+        </ul>
+      </div>
+
+      <!-- Controladoria & Finanças -->
+      <div class="card dept-card">
+        <div class="dept-header">
+          <div>
+            <div class="dept-title">Finanças &amp; Controladoria</div>
+            <div class="dept-agents-row">
+              <span class="dept-tag">Fluxo de Caixa</span>
+              <span class="dept-tag">Investimentos</span>
+              <span class="dept-tag">Riscos</span>
+            </div>
+          </div>
+          <span class="dept-badge dept-badge-active">Disponível</span>
+        </div>
+        <p class="dept-eyebrow">O que esse time entrega</p>
+        <ul class="dept-deliverables">
+          <li>Controle do dinheiro entrando e saindo da empresa</li>
+          <li>Análise de quanto cada área do negócio vale</li>
+          <li>Planejamento para pagar menos e ganhar mais</li>
+        </ul>
+      </div>
+
+      <!-- Capital Humano -->
+      <div class="card dept-card">
+        <div class="dept-header">
+          <div>
+            <div class="dept-title">Pessoas &amp; Cultura</div>
+            <div class="dept-agents-row">
+              <span class="dept-tag">Cultura</span>
+              <span class="dept-tag">Contratação</span>
+              <span class="dept-tag">Retenção</span>
+            </div>
+          </div>
+          <span class="dept-badge dept-badge-active">Disponível</span>
+        </div>
+        <p class="dept-eyebrow">O que esse time entrega</p>
+        <ul class="dept-deliverables">
+          <li>Manual de cultura e valores da empresa</li>
+          <li>Processo de contratação organizado e eficiente</li>
+          <li>Plano de cargos e salários estruturado</li>
+        </ul>
+      </div>
+
+      <!-- Estratégia & Expansão -->
+      <div class="card dept-card">
+        <div class="dept-header">
+          <div>
+            <div class="dept-title">Estratégia &amp; Expansão</div>
+            <div class="dept-agents-row">
+              <span class="dept-tag">Novos Mercados</span>
+              <span class="dept-tag">Concorrência</span>
+              <span class="dept-tag">Crescimento</span>
+            </div>
+          </div>
+          <span class="dept-badge dept-badge-active">Disponível</span>
+        </div>
+        <p class="dept-eyebrow">O que esse time entrega</p>
+        <ul class="dept-deliverables">
+          <li>Estudo de oportunidades em novos mercados</li>
+          <li>Análise detalhada dos concorrentes</li>
+          <li>Plano de crescimento com metas claras</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ TECH BU DIVIDER ════════════════ -->
+<div style="padding:5rem 0 0;position:relative;z-index:10">
+  <div class="container">
+    <div style="border:1px solid rgba(59,130,246,.15);border-radius:1rem;padding:2.5rem 3rem;background:rgba(59,130,246,.03);display:flex;align-items:center;justify-content:space-between;gap:2rem;flex-wrap:wrap">
+      <div>
+        <p class="label-mono" style="color:var(--accent);margin-bottom:.5rem">Em detalhe</p>
+        <h3 class="font-heading" style="font-size:1.75rem;font-weight:900;letter-spacing:-.02em">Tecnologia &amp; Produto — <span style="color:var(--text-dim);font-weight:400;font-style:italic">como funciona na prática</span></h3>
+        <p style="font-size:.875rem;color:var(--text-dim);margin-top:.4rem">Veja passo a passo o que acontece desde o momento que você digita sua ideia até receber o resultado pronto.</p>
+      </div>
+      <a href="#pipeline" class="btn-nav" style="white-space:nowrap;flex-shrink:0">Ver passo a passo</a>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ PIPELINE ════════════════ -->
+<section id="pipeline" style="padding:6rem 0;">
+  <div class="container">
+    <div class="section-header fade-up">
+      <div class="section-eyebrow">Tecnologia &amp; Produto — Passo a Passo</div>
+      <h2 class="section-title font-heading">
+        Da sua ideia ao <span class="text-accent">resultado</span><br>sem você precisar fazer nada
+      </h2>
+      <div class="section-divider"></div>
+      <p class="section-desc">
+        Você escreve o que precisa. A equipe assume. Cada especialista faz a sua parte, na ordem certa, e você acompanha tudo em tempo real.
+      </p>
+    </div>
+
+    <div class="pipeline fade-up">
+      <!-- Luna -->
+      <div class="pipeline-item">
+        <div class="pipeline-num">Passo 01</div>
+        <div class="pipeline-avatar" style="background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.3);color:#f87171">LU</div>
+        <div class="pipeline-name">Luna</div>
+        <div class="pipeline-role">Analista de Negócio</div>
+        <p class="pipeline-phase-label">Pesquisa seu mercado, entende o que sua empresa precisa e mapeia os riscos antes de qualquer trabalho começar.</p>
+      </div>
+      <!-- Sarah -->
+      <div class="pipeline-item">
+        <div class="pipeline-num">Passo 02</div>
+        <div class="pipeline-avatar" style="background:rgba(99,102,241,.12);border-color:rgba(99,102,241,.3);color:#818cf8">SA</div>
+        <div class="pipeline-name">Sarah</div>
+        <div class="pipeline-role">Gerente de Produto</div>
+        <p class="pipeline-phase-label">Organiza o que precisa ser feito, define o que tem mais valor para o seu negócio e estabelece as metas do projeto.</p>
+      </div>
+      <!-- Bob -->
+      <div class="pipeline-item">
+        <div class="pipeline-num">Passo 03</div>
+        <div class="pipeline-avatar" style="background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.3);color:#34d399">BO</div>
+        <div class="pipeline-name">Bob</div>
+        <div class="pipeline-role">Coordenador de Equipe</div>
+        <p class="pipeline-phase-label">Distribui o trabalho entre os especialistas, define a ordem certa e garante que nenhuma tarefa fique para trás.</p>
+      </div>
+      <!-- Alex -->
+      <div class="pipeline-item">
+        <div class="pipeline-num">Passo 04</div>
+        <div class="pipeline-avatar" style="background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.3);color:#c084fc">AL</div>
+        <div class="pipeline-name">Alex</div>
+        <div class="pipeline-role">Designer</div>
+        <p class="pipeline-phase-label">Cria a identidade visual do seu projeto do zero — com as cores, a tipografia e o estilo da sua empresa.</p>
+      </div>
+      <!-- Bruno -->
+      <div class="pipeline-item">
+        <div class="pipeline-num">Passo 05</div>
+        <div class="pipeline-avatar" style="background:rgba(6,182,212,.12);border-color:rgba(6,182,212,.3);color:#22d3ee">BR</div>
+        <div class="pipeline-name">Bruno</div>
+        <div class="pipeline-role">Construtor</div>
+        <p class="pipeline-phase-label">Constrói o site, a página ou o sistema que você pediu — completo, com formulário de contato e pronto para publicar.</p>
+      </div>
+      <!-- Diego -->
+      <div class="pipeline-item">
+        <div class="pipeline-num">Passo 06</div>
+        <div class="pipeline-avatar" style="background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.3);color:#fbbf24">DI</div>
+        <div class="pipeline-name">Diego</div>
+        <div class="pipeline-role">Revisor</div>
+        <p class="pipeline-phase-label">Revisa tudo antes de entregar — funciona no celular? o botão leva para o lugar certo? o formulário envia? Só passa se estiver perfeito.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ EQUIPE ════════════════ -->
+<section id="equipe" style="padding:6rem 0;">
+  <div class="container">
+    <div class="section-header fade-up">
+      <div class="section-eyebrow">Tecnologia &amp; Produto — A Equipe</div>
+      <h2 class="section-title font-heading">
+        8 especialistas. <span class="text-accent">Trabalhando por você.</span>
+      </h2>
+      <div class="section-divider"></div>
+      <p class="section-desc">
+        Cada um tem um papel diferente. Juntos, entregam projetos completos — do início ao fim, sem precisar da sua gestão.
+      </p>
+    </div>
+
+    <div class="agents-grid fade-up">
+      <!-- Luna -->
+      <div class="card agent-card">
+        <div class="agent-avatar" style="background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.3)">LU</div>
+        <div class="agent-name">Luna</div>
+        <span class="agent-dept" style="background:rgba(239,68,68,.1);color:#f87171;border:1px solid rgba(239,68,68,.2)">Analista de Negócio</span>
+        <p class="agent-desc">Pesquisa seu mercado, entende o que sua empresa precisa e levanta os riscos antes de qualquer coisa começar.</p>
+        <ul class="agent-tools">
+          <li>Lê o site da sua empresa automaticamente</li>
+          <li>Identifica oportunidades e ameaças do projeto</li>
+        </ul>
+      </div>
+      <!-- Sarah -->
+      <div class="card agent-card">
+        <div class="agent-avatar" style="background:rgba(99,102,241,.15);color:#818cf8;border:1px solid rgba(99,102,241,.3)">SA</div>
+        <div class="agent-name">Sarah</div>
+        <span class="agent-dept" style="background:rgba(99,102,241,.1);color:#818cf8;border:1px solid rgba(99,102,241,.2)">Gerente de Produto</span>
+        <p class="agent-desc">Organiza o que precisa ser feito, define prioridades e garante que a equipe foca no que gera mais resultado.</p>
+        <ul class="agent-tools">
+          <li>Define o escopo e as metas do projeto</li>
+          <li>Prioriza o que traz mais valor para o negócio</li>
+        </ul>
+      </div>
+      <!-- Bob -->
+      <div class="card agent-card">
+        <div class="agent-avatar" style="background:rgba(16,185,129,.15);color:#34d399;border:1px solid rgba(16,185,129,.3)">BO</div>
+        <div class="agent-name">Bob</div>
+        <span class="agent-dept" style="background:rgba(16,185,129,.1);color:#34d399;border:1px solid rgba(16,185,129,.2)">Coordenador</span>
+        <p class="agent-desc">Distribui o trabalho, organiza a ordem de execução e garante que nenhuma etapa seja pulada.</p>
+        <ul class="agent-tools">
+          <li>Mantém a equipe alinhada e no prazo</li>
+          <li>Você acompanha cada tarefa em tempo real</li>
+        </ul>
+      </div>
+      <!-- Alex -->
+      <div class="card agent-card">
+        <div class="agent-avatar" style="background:rgba(139,92,246,.15);color:#c084fc;border:1px solid rgba(139,92,246,.3)">AL</div>
+        <div class="agent-name">Alex</div>
+        <span class="agent-dept" style="background:rgba(139,92,246,.1);color:#c084fc;border:1px solid rgba(139,92,246,.2)">Designer</span>
+        <p class="agent-desc">Cria a identidade visual do projeto do zero — cores, tipografia e estilo pensados para o seu setor e público.</p>
+        <ul class="agent-tools">
+          <li>Visual único para cada empresa, sem templates genéricos</li>
+          <li>Estilo adaptado ao seu setor e aos seus clientes</li>
+        </ul>
+      </div>
+      <!-- Bruno -->
+      <div class="card agent-card">
+        <div class="agent-avatar" style="background:rgba(6,182,212,.15);color:#22d3ee;border:1px solid rgba(6,182,212,.3)">BR</div>
+        <div class="agent-name">Bruno</div>
+        <span class="agent-dept" style="background:rgba(6,182,212,.1);color:#22d3ee;border:1px solid rgba(6,182,212,.2)">Construtor</span>
+        <p class="agent-desc">Constrói o site ou a página que você pediu, completo e pronto para ser publicado — funciona em celular e computador.</p>
+        <ul class="agent-tools">
+          <li>Página completa com seções, fotos e formulário</li>
+          <li>Bonito no celular tanto quanto no computador</li>
+        </ul>
+      </div>
+      <!-- Carla -->
+      <div class="card agent-card">
+        <div class="agent-avatar" style="background:rgba(16,185,129,.15);color:#10b981;border:1px solid rgba(16,185,129,.3)">CA</div>
+        <div class="agent-name">Carla</div>
+        <span class="agent-dept" style="background:rgba(16,185,129,.1);color:#10b981;border:1px solid rgba(16,185,129,.2)">Estrutura e Sistema</span>
+        <p class="agent-desc">Cria a parte que funciona por trás — formulários que salvam dados, cadastros de clientes e áreas de membros.</p>
+        <ul class="agent-tools">
+          <li>Guarda os dados dos clientes que preencherem formulários</li>
+          <li>Monta sistemas completos para o seu negócio</li>
+        </ul>
+      </div>
+      <!-- Diego -->
+      <div class="card agent-card">
+        <div class="agent-avatar" style="background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3)">DI</div>
+        <div class="agent-name">Diego</div>
+        <span class="agent-dept" style="background:rgba(245,158,11,.1);color:#fbbf24;border:1px solid rgba(245,158,11,.2)">Revisor</span>
+        <p class="agent-desc">Testa tudo antes de entregar — se algo não funcionar como esperado, volta para correção antes de chegar nas suas mãos.</p>
+        <ul class="agent-tools">
+          <li>Verifica se funciona no celular e no computador</li>
+          <li>Confirma que formulários, botões e links estão corretos</li>
+        </ul>
+      </div>
+      <!-- Elena -->
+      <div class="card agent-card">
+        <div class="agent-avatar" style="background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3)">EL</div>
+        <div class="agent-name">Elena</div>
+        <span class="agent-dept" style="background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2)">Publicação</span>
+        <p class="agent-desc">Coloca o projeto no ar quando você quiser — configura o servidor e garante que seus clientes conseguem acessar.</p>
+        <ul class="agent-tools">
+          <li>Publica o site para qualquer pessoa acessar</li>
+          <li>Mantém tudo funcionando de forma estável</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ RESULTADO ════════════════ -->
+<section id="resultado" style="padding:6rem 0;border-top:1px solid var(--border)">
+  <div class="container">
+    <div class="section-header fade-up">
+      <div class="section-eyebrow">Por que usar o IdealOS</div>
+      <h2 class="section-title font-heading">
+        O que muda na <span class="text-accent">sua empresa</span>
+      </h2>
+      <div class="section-divider"></div>
+    </div>
+
+    <div class="features-grid fade-up">
+      <div class="card">
+        <div class="feat-icon"><svg width="20" height="20" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <div class="feat-title">Você vê acontecendo</div>
+        <p class="feat-desc">Acompanhe cada especialista trabalhando ao vivo — quem está fazendo o quê, em qual etapa e o que já foi concluído.</p>
+      </div>
+      <div class="card">
+        <div class="feat-icon"><svg width="20" height="20" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div class="feat-title">Resultado pronto para usar</div>
+        <p class="feat-desc">Site, página ou sistema completo — com design profissional, formulário de contato integrado e funcionando no celular.</p>
+      </div>
+      <div class="card">
+        <div class="feat-icon"><svg width="20" height="20" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="feat-title">Entrega rápida</div>
+        <p class="feat-desc">O que levaria semanas com uma agência fica pronto em minutos. Sem reunião de briefing, sem vai-e-vem de aprovação.</p>
+      </div>
+      <div class="card">
+        <div class="feat-icon"><svg width="20" height="20" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+        <div class="feat-title">Seus dados protegidos</div>
+        <p class="feat-desc">Tudo que você compartilha fica dentro da sua conta. Nenhuma outra empresa tem acesso ao que é seu.</p>
+      </div>
+      <div class="card">
+        <div class="feat-icon"><svg width="20" height="20" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <div class="feat-title">Lembra da sua empresa</div>
+        <p class="feat-desc">Não precisa explicar de novo toda vez. O IdealOS guarda o contexto, as cores da marca e o histórico dos projetos anteriores.</p>
+      </div>
+      <div class="card">
+        <div class="feat-icon"><svg width="20" height="20" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg></div>
+        <div class="feat-title">Conhece sua marca</div>
+        <p class="feat-desc">Informe o site da sua empresa e o IdealOS extrai automaticamente as cores, o logo e o tom de voz para usar em tudo que criar.</p>
+      </div>
+      <div class="card">
+        <div class="feat-icon"><svg width="20" height="20" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div>
+        <div class="feat-title">Entregue sem erros</div>
+        <p class="feat-desc">Um especialista revisa tudo antes de chegar nas suas mãos. Se tiver algo errado, ele corrige antes de te apresentar o resultado.</p>
+      </div>
+      <div class="card">
+        <div class="feat-icon"><svg width="20" height="20" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <div class="feat-title">Funciona em qualquer tela</div>
+        <p class="feat-desc">Sites e páginas criados para funcionar perfeitamente no celular, tablet e computador — sem precisar pedir ajustes depois.</p>
+      </div>
+      <div class="card">
+        <div class="feat-icon"><svg width="20" height="20" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+        <div class="feat-title">Cresça sem limite</div>
+        <p class="feat-desc">Ative mais departamentos conforme a empresa cresce. Marketing, Finanças, Pessoas — todos prontos para trabalhar quando você precisar.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TOOLS REMOVED -->
+<div style="display:none"><div class="tool-item">
+        <div class="tool-name">fetch_stock_images</div>
+        <p class="tool-desc">Retorna URLs de imagens Unsplash por setor para uso em landing pages.</p>
+      </div>
+      <div class="tool-item">
+        <div class="tool-name">analyze_website</div>
+        <p class="tool-desc">Raspa site da empresa: extrai logo, cores, tagline e salva identidade de marca.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ CTA ════════════════ -->
+<section class="cta-section fade-up">
+  <div class="container" style="position:relative;z-index:10">
+    <p class="label-mono" style="color:var(--accent);text-align:center;margin-bottom:1.5rem;letter-spacing:.4em">Pronto para começar?</p>
+    <h2 class="cta-title font-heading">
+      Sua equipe digital<br><span class="text-shiny">espera por você.</span>
+    </h2>
+    <p class="cta-desc">Diga o que você precisa. Em minutos, sua equipe assume o trabalho e você acompanha tudo acontecendo ao vivo.</p>
+    <a href="/" class="btn-primary" style="display:inline-flex">
+      Começar Agora
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- ════════════════ GRUPO IDEAL TRENDS ════════════════ -->
+<section class="git-section fade-up">
+  <div class="container">
+    <div class="git-inner">
+
+      <div class="git-logo-col">
+        <img src="./logogit.png" alt="Grupo Ideal Trends" class="git-logo">
+        <div class="git-stats">
+          <div class="git-stat">
+            <div class="git-stat-value"><span class="git-stat-num" data-target="30">0</span><span class="git-stat-suffix">+</span></div>
+            <span class="git-stat-label">Empresas</span>
+          </div>
+          <div class="git-stat-divider"></div>
+          <div class="git-stat">
+            <div class="git-stat-value"><span class="git-stat-num" data-target="40">0</span></div>
+            <span class="git-stat-label">Países</span>
+          </div>
+          <div class="git-stat-divider"></div>
+          <div class="git-stat">
+            <div class="git-stat-value"><span class="git-stat-num" data-target="130">0</span><span class="git-stat-suffix">mil+</span></div>
+            <span class="git-stat-label">Clientes</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="git-content-col">
+        <p class="label-mono" style="color:var(--accent);margin-bottom:1rem">Quem está por trás do Ideal OS</p>
+        <h2 class="git-title font-heading">Grupo Ideal Trends</h2>
+        <p class="git-tagline">"Somos movidos por um sonho grandioso e desafiador."</p>
+        <p class="git-desc">
+          Fundado em 1995 por José Paulo, o Grupo Ideal Trends é um holding multinacional com sede em São Paulo e presença em 40 países. Com mais de 30 empresas ativas nos setores de tecnologia, saúde, educação, finanças e marketing, o grupo tem uma missão clara: estar em 100 países nos próximos 10 anos, transformando negócios e vidas por meio da inovação.
+        </p>
+        <p class="git-desc">
+          O Ideal OS é a mais nova expressão dessa visão — uma plataforma criada para colocar o poder de uma equipe completa nas mãos de qualquer empresário, em qualquer lugar do mundo.
+        </p>
+        <div class="git-sectors">
+          <span class="git-sector">Tecnologia</span>
+          <span class="git-sector">Saúde</span>
+          <span class="git-sector">Educação</span>
+          <span class="git-sector">Marketing</span>
+          <span class="git-sector">Finanças</span>
+          <span class="git-sector">Imóveis</span>
+          <span class="git-sector">Cosméticos</span>
+          <span class="git-sector">Publicação</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════ FOOTER ════════════════ -->
+<footer>
+  <span class="footer-logo">Ideal <em>OS</em></span>
+  <p class="footer-tagline">
+    Para quem cansou de planejar e quer começar a executar. <strong style="color:var(--text-main)">Sua empresa no automático.</strong>
+  </p>
+  <a href="/" class="btn-nav" style="display:inline-block;margin-bottom:4rem">Entrar no Sistema</a>
+  <div class="footer-links">
+    <a href="#">Início</a>
+    <a href="#">Privacidade</a>
+    <a href="#">Falar com a Equipe</a>
+    <a href="#">Ajuda</a>
+  </div>
+  <p class="footer-copy">© 2026 GRUPO IDEAL TRENDS. TODOS OS DIREITOS RESERVADOS.</p>
+</footer>
+
+<!-- ════════════════ SCRIPTS ════════════════ -->
+<script>
+/* ── Canvas particle system ─────────────────── */
+(function(){
+  const canvas = document.getElementById('bg-canvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H, animId;
+  const mouse = { x: -9999, y: -9999 };
+
+  function resize(){ W = canvas.width = innerWidth; H = canvas.height = innerHeight; }
+  resize();
+  addEventListener('resize', resize);
+  addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+  const COUNT = 40;
+  const pts = Array.from({ length: COUNT }, () => {
+    const x = Math.random() * innerWidth;
+    const y = Math.random() * innerHeight;
+    return { x, y, ox: x, oy: y, vx: (Math.random()-.5)*.4, vy: (Math.random()-.5)*.4, sz: Math.random()*2+.5, op: Math.random()*.3+.1 };
+  });
+
+  function draw(){
+    ctx.fillStyle = 'rgba(2,2,2,.15)';
+    ctx.fillRect(0, 0, W, H);
+    pts.forEach((p, i) => {
+      p.x += p.vx; p.y += p.vy;
+      const dx = mouse.x - p.x, dy = mouse.y - p.y;
+      const d  = Math.hypot(dx, dy);
+      if(d < 200){ const f=(200-d)/200; p.x -= dx*f*.02; p.y -= dy*f*.02; }
+      if(p.x<0||p.x>W) p.vx *= -1;
+      if(p.y<0||p.y>H) p.vy *= -1;
+      ctx.globalAlpha = p.op;
+      ctx.fillStyle = '#3B82F6';
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.sz, 0, Math.PI*2); ctx.fill();
+      for(let j=i+1; j<pts.length; j++){
+        const d2 = Math.hypot(p.x-pts[j].x, p.y-pts[j].y);
+        if(d2<150){
+          ctx.globalAlpha = .15*(1-d2/150);
+          ctx.strokeStyle = '#3B82F6'; ctx.lineWidth = .5;
+          ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(pts[j].x,pts[j].y); ctx.stroke();
+        }
+      }
+    });
+    animId = requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+/* ── Navbar scroll glass ────────────────────── */
+const nav = document.getElementById('navbar');
+addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', scrollY > 50);
+}, { passive: true });
+
+/* ── IntersectionObserver fade-up ───────────── */
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: .1 });
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+/* ── Counter animation ──────────────────────── */
+function animateCounter(el, target, duration=1200){
+  const start = performance.now();
+  const raf = (now) => {
+    const t = Math.min((now-start)/duration, 1);
+    const ease = 1-Math.pow(1-t,3);
+    el.textContent = Math.round(ease*target) + (el.dataset.suffix||'');
+    if(t<1) requestAnimationFrame(raf);
+    else el.textContent = target + (el.dataset.suffix||'');
+  };
+  requestAnimationFrame(raf);
+}
+const counterObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting){
+      const el = e.target;
+      const target = parseInt(el.dataset.target,10);
+      animateCounter(el, target);
+      counterObs.unobserve(el);
+    }
+  });
+}, { threshold:.5 });
+document.querySelectorAll('[data-target]').forEach(el => counterObs.observe(el));
+
+/* ── Smooth scroll ──────────────────────────── */
+document.querySelectorAll('a[href^="#"]').forEach(a => {
+  a.addEventListener('click', e => {
+    const id = a.getAttribute('href').slice(1);
+    const el = document.getElementById(id);
+    if(el){ e.preventDefault(); el.scrollIntoView({ behavior:'smooth' }); }
+  });
+});
+</script>
+</body>
+</html>

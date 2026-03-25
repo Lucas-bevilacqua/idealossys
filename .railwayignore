@@ -1,0 +1,8 @@
+bun.lockb
+*.lockb
+build/
+.git/
+.env
+Desktop/
+Downloads/
+.claude/

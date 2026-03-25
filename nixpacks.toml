@@ -1,0 +1,17 @@
+# Configuração de build para Railway.app
+# Railway usa este arquivo para saber como construir e iniciar o projeto
+
+[phases.setup]
+nixPkgs = ["python311", "nodejs_20"]
+
+[phases.install]
+cmds = [
+    "pip install -r backend/requirements.txt",
+    "npm install"
+]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"

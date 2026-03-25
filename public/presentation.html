@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ideal OS — Apresentação</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+:root {
+  --bg:        #020202;
+  --surface:   #0f1117;
+  --border:    rgba(48,54,61,0.6);
+  --text-main: #F0F6FC;
+  --text-dim:  #8B949E;
+  --accent:    #3B82F6;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #1a1a1a;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Each slide is 1280×720 (16:9) ── */
+.slide {
+  width: 1280px;
+  height: 720px;
+  background: var(--bg);
+  color: var(--text-main);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  margin: 0 auto 4px;
+  page-break-after: always;
+}
+
+/* ── Background decorations shared ── */
+.slide::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(48,54,61,.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(48,54,61,.06) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+  z-index: 0;
+}
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+}
+.glow-tr { top:-20%; right:-10%; width:500px; height:500px; background:rgba(59,130,246,.14); }
+.glow-bl { bottom:-20%; left:-10%; width:400px; height:400px; background:rgba(59,130,246,.08); }
+
+/* ── Typography helpers ── */
+.font-heading { font-family: 'Outfit', sans-serif; letter-spacing: -0.03em; }
+.mono { font-family: 'JetBrains Mono', monospace; }
+.label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .3em;
+  color: var(--accent);
+}
+.text-dim { color: var(--text-dim); }
+.text-accent { color: var(--accent); }
+
+@keyframes shimmer {
+  from { background-position: -200% center; }
+  to   { background-position:  200% center; }
+}
+.text-shiny {
+  background: linear-gradient(to right,#fff 20%,#3B82F6 40%,#3B82F6 60%,#fff 80%);
+  background-size: 200% auto;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer 5s linear infinite;
+}
+
+/* ── Slide number ── */
+.slide-num {
+  position: absolute;
+  bottom: 28px; right: 40px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .3em;
+  color: rgba(255,255,255,.15);
+  z-index: 10;
+}
+/* ── Brand corner ── */
+.brand-corner {
+  position: absolute;
+  bottom: 28px; left: 40px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px; font-weight: 900;
+  letter-spacing: -.02em; text-transform: uppercase;
+  color: rgba(255,255,255,.2);
+  z-index: 10;
+}
+.brand-corner em { font-weight:300; font-style:italic; }
+
+/* ── Card ── */
+.card {
+  border: 1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.025);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+}
+
+/* ══════════════════════════════
+   SLIDE 1 — COVER
+══════════════════════════════ */
+.s1-content {
+  position: relative; z-index: 10;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  width: 100%; text-align: center; padding: 60px;
+}
+.s1-badge {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 7px 20px; border-radius: 999px;
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.1);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .4em;
+  color: var(--accent); margin-bottom: 36px;
+}
+.pulse {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59,130,246,.3);
+  animation: pulse-anim 2s ease-in-out infinite;
+}
+@keyframes pulse-anim { 0%,100%{box-shadow:0 0 0 3px rgba(59,130,246,.3)} 50%{box-shadow:0 0 0 7px rgba(59,130,246,.1)} }
+.s1-h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 100px; font-weight: 900;
+  letter-spacing: -.04em; line-height: .9;
+  margin-bottom: 28px;
+}
+.s1-sub {
+  font-size: 18px; color: var(--text-dim); font-weight: 500;
+  max-width: 640px; line-height: 1.6; margin-bottom: 44px;
+}
+.s1-logo {
+  height: 28px; opacity: .5;
+}
+.s1-divider {
+  width: 1px; height: 28px;
+  background: var(--border); margin: 0 20px;
+}
+.s1-by {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .25em;
+  color: rgba(255,255,255,.3);
+}
+.s1-footer-row {
+  display: flex; align-items: center;
+}
+
+/* ══════════════════════════════
+   SLIDE 2 — O QUE É
+══════════════════════════════ */
+.s2-layout {
+  position: relative; z-index: 10;
+  display: flex; gap: 0;
+  width: 100%; height: 100%;
+}
+.s2-left {
+  width: 420px; flex-shrink: 0;
+  background: rgba(59,130,246,.04);
+  border-right: 1px solid rgba(59,130,246,.12);
+  padding: 64px 52px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.s2-right {
+  flex: 1; padding: 64px 56px;
+  display: flex; flex-direction: column; justify-content: center;
+}
+.s2-h2 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 52px; font-weight: 900;
+  letter-spacing: -.03em; line-height: .95;
+  margin-bottom: 20px;
+}
+.s2-desc {
+  font-size: 14px; color: var(--text-dim);
+  line-height: 1.75; margin-bottom: 36px;
+}
+.s2-stat-row {
+  display: flex; gap: 32px;
+}
+.s2-stat { display: flex; flex-direction: column; gap: 4px; }
+.s2-stat-n {
+  font-family: 'Outfit', sans-serif;
+  font-size: 36px; font-weight: 900;
+  letter-spacing: -.03em; color: var(--text-main);
+}
+.s2-stat-l {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .2em;
+  color: var(--text-dim);
+}
+.s2-pills {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 32px;
+}
+.s2-pill {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .12em;
+  padding: 5px 12px; border-radius: 6px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03);
+  color: var(--text-dim);
+}
+.s2-quote {
+  font-size: 22px; font-style: italic; font-weight: 300;
+  color: rgba(255,255,255,.6); line-height: 1.5;
+  border-left: 2px solid var(--accent);
+  padding-left: 24px; margin-bottom: 32px;
+}
+
+/* ══════════════════════════════
+   SLIDE 3 — DEPARTAMENTOS
+══════════════════════════════ */
+.s3-layout {
+  position: relative; z-index: 10;
+  width: 100%; padding: 52px 60px;
+  display: flex; flex-direction: column;
+}
+.s3-header { margin-bottom: 36px; }
+.s3-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 42px; font-weight: 900;
+  letter-spacing: -.03em; line-height: 1;
+}
+.s3-grid {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 14px; flex: 1;
+}
+.s3-card {
+  padding: 20px 22px;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  background: rgba(255,255,255,.025);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.s3-card-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px; font-weight: 800; letter-spacing: -.01em;
+}
+.s3-card-desc {
+  font-size: 11px; color: var(--text-dim); line-height: 1.55;
+}
+.s3-badge {
+  align-self: flex-start;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .15em;
+  padding: 3px 8px; border-radius: 999px;
+  background: rgba(52,211,153,.12);
+  border: 1px solid rgba(52,211,153,.25);
+  color: #34d399;
+}
+.s3-color-bar { width: 24px; height: 3px; border-radius: 2px; }
+.s3-outputs { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+.s3-out {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .08em;
+  padding: 2px 7px; border-radius: 4px;
+  background: rgba(59,130,246,.07);
+  border: 1px solid rgba(59,130,246,.18);
+  color: rgba(59,130,246,.75);
+}
+
+/* ══════════════════════════════
+   SLIDE 4 — COMO FUNCIONA
+══════════════════════════════ */
+.s4b-layout {
+  position: relative; z-index: 10;
+  width: 100%; height: 100%;
+  padding: 52px 60px 44px;
+  display: flex; flex-direction: column;
+}
+.s4b-cols {
+  display: grid; grid-template-columns: 1fr 44px 1fr 44px 1fr;
+  flex: 1; align-items: stretch; gap: 0;
+}
+.s4b-arrow {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; color: rgba(59,130,246,.35);
+}
+.s4b-step {
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 14px;
+  background: rgba(255,255,255,.02);
+  padding: 32px 28px 24px;
+  display: flex; flex-direction: column; gap: 0;
+}
+.s4b-step.highlight {
+  border-color: rgba(59,130,246,.25);
+  background: rgba(59,130,246,.04);
+}
+.s4b-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .25em;
+  color: var(--accent); margin-bottom: 20px;
+}
+.s4b-icon {
+  width: 56px; height: 56px; border-radius: 14px;
+  background: rgba(59,130,246,.1);
+  border: 1px solid rgba(59,130,246,.2);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px;
+}
+.s4b-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 26px; font-weight: 900;
+  letter-spacing: -.02em; line-height: 1.05;
+  margin-bottom: 12px;
+}
+.s4b-desc {
+  font-size: 12px; color: var(--text-dim);
+  line-height: 1.7; margin-bottom: 24px;
+}
+.s4b-items { display: flex; flex-direction: column; gap: 7px; margin-top: auto; }
+.s4b-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border-radius: 8px;
+  background: rgba(255,255,255,.03);
+  border: 1px solid rgba(255,255,255,.05);
+  font-size: 11px; color: var(--text-dim);
+}
+.s4b-item-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0;
+}
+
+/* ══════════════════════════════
+   SLIDE 6 — RESULTADOS
+══════════════════════════════ */
+.s6-layout {
+  position: relative; z-index: 10;
+  width: 100%; padding: 52px 60px;
+  display: flex; flex-direction: column;
+}
+.s6-grid {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 14px; flex: 1;
+}
+.s6-item {
+  padding: 24px;
+  border: 1px solid rgba(255,255,255,.06);
+  border-radius: 10px;
+  background: rgba(255,255,255,.02);
+  display: flex; flex-direction: column; gap: 10px;
+}
+.s6-icon {
+  width: 36px; height: 36px; border-radius: 8px;
+  background: rgba(59,130,246,.1);
+  border: 1px solid rgba(59,130,246,.2);
+  display: flex; align-items: center; justify-content: center;
+}
+.s6-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 15px; font-weight: 800; letter-spacing: -.01em;
+}
+.s6-desc { font-size: 11px; color: var(--text-dim); line-height: 1.55; }
+
+/* ══════════════════════════════
+   SLIDE 7 — PLANOS
+══════════════════════════════ */
+.s-plans-layout {
+  position: relative; z-index: 10;
+  width: 100%; height: 100%;
+  padding: 44px 60px 36px;
+  display: flex; flex-direction: column;
+}
+.s-plans-grid {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 16px; flex: 1; min-height: 0;
+}
+.s-plan {
+  padding: 30px 26px 24px;
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: 14px;
+  background: rgba(255,255,255,.02);
+  display: flex; flex-direction: column; position: relative; overflow: hidden;
+}
+.s-plan.featured {
+  border-color: rgba(59,130,246,.4);
+  background: rgba(59,130,246,.07);
+}
+.s-plan.featured::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg,#3B82F6,#60a5fa);
+}
+.s-plan-tag {
+  position: absolute; top: 18px; right: 18px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .12em;
+  padding: 3px 9px; border-radius: 999px;
+  background: rgba(59,130,246,.2); border: 1px solid rgba(59,130,246,.4);
+  color: var(--accent);
+}
+.s-plan-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .2em;
+  color: var(--text-dim); margin-bottom: 14px;
+}
+.s-plan-price {
+  font-family: 'Outfit', sans-serif;
+  font-size: 52px; font-weight: 900;
+  letter-spacing: -.04em; line-height: 1;
+  color: var(--text-main); display: flex; align-items: flex-end; gap: 4px;
+}
+.s-plan-price .currency {
+  font-size: 20px; font-weight: 600;
+  color: var(--text-dim); margin-bottom: 6px;
+}
+.s-plan-price .period {
+  font-size: 13px; font-weight: 500;
+  color: var(--text-dim); margin-bottom: 8px; margin-left: 2px;
+}
+.s-plan-tagline {
+  font-size: 10px; color: var(--text-dim);
+  margin-top: 6px; margin-bottom: 16px; line-height: 1.5;
+}
+.s-plan-divider {
+  width: 100%; height: 1px;
+  background: rgba(255,255,255,.06); margin-bottom: 16px;
+}
+.s-plan-features { display: flex; flex-direction: column; gap: 9px; flex: 1; }
+.s-plan-feat {
+  display: flex; align-items: flex-start; gap: 9px;
+  font-size: 11px; color: var(--text-dim); line-height: 1.4;
+}
+.s-plan-feat-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--accent); flex-shrink: 0; margin-top: 4px;
+}
+.s-plan-feat strong { color: var(--text-main); font-weight: 600; }
+.s-plan-note {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 7.5px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .1em;
+  color: rgba(255,255,255,.18);
+  margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid rgba(255,255,255,.05);
+}
+.s-plans-footnote {
+  text-align: center; margin-top: 14px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; color: rgba(255,255,255,.2);
+  text-transform: uppercase; letter-spacing: .15em;
+}
+.s-cred-ref {
+  display: flex; gap: 8px; margin-bottom: 18px; flex-shrink: 0;
+}
+.s-cred-ref-item {
+  flex: 1; padding: 10px 14px; border-radius: 8px;
+  border: 1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.02);
+  display: flex; flex-direction: column; gap: 4px;
+}
+.s-cred-ref-label {
+  font-size: 9px; color: var(--text-dim); line-height: 1.3;
+}
+.s-cred-ref-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px; font-weight: 900; letter-spacing: -.02em;
+  color: var(--accent);
+}
+.s-cred-ref-val span {
+  font-size: 9px; font-weight: 500; color: var(--text-dim); margin-left: 2px;
+}
+
+/* ══════════════════════════════
+   SLIDE 8 — GRUPO IDEAL TRENDS
+══════════════════════════════ */
+.s7-layout {
+  position: relative; z-index: 10;
+  display: flex; width: 100%; height: 100%;
+}
+.s7-left {
+  width: 440px; flex-shrink: 0;
+  background: rgba(59,130,246,.04);
+  border-right: 1px solid rgba(59,130,246,.1);
+  padding: 60px 52px;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center; text-align: center; gap: 28px;
+}
+.s7-logo { width: 200px; opacity: .9; }
+.s7-stats { display: flex; flex-direction: column; gap: 0; width: 100%; }
+.s7-stat-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255,255,255,.05);
+}
+.s7-stat-row:last-child { border-bottom: none; }
+.s7-stat-val {
+  font-family: 'Outfit', sans-serif;
+  font-size: 28px; font-weight: 900;
+  letter-spacing: -.03em; color: var(--text-main);
+}
+.s7-stat-val span { font-size: 16px; color: var(--accent); }
+.s7-stat-lbl {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .2em; color: var(--text-dim);
+}
+.s7-right {
+  flex: 1; padding: 60px 56px;
+  display: flex; flex-direction: column; justify-content: center; gap: 20px;
+}
+.s7-h2 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 42px; font-weight: 900;
+  letter-spacing: -.03em; line-height: .95;
+}
+.s7-tagline {
+  font-size: 15px; font-style: italic; font-weight: 300;
+  color: var(--accent); opacity: .85;
+  border-left: 2px solid var(--accent); padding-left: 16px;
+}
+.s7-desc { font-size: 13px; color: var(--text-dim); line-height: 1.75; }
+.s7-sectors { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 8px; }
+.s7-sector {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .12em;
+  padding: 4px 10px; border-radius: 5px;
+  border: 1px solid rgba(255,255,255,.08);
+  background: rgba(255,255,255,.03); color: var(--text-dim);
+}
+
+/* ══════════════════════════════
+   SLIDE 8 — CTA FINAL
+══════════════════════════════ */
+.s8-content {
+  position: relative; z-index: 10;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  width: 100%; text-align: center; padding: 60px;
+  gap: 0;
+}
+.s8-h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 80px; font-weight: 900;
+  letter-spacing: -.04em; line-height: .9;
+  margin-bottom: 28px;
+}
+.s8-desc {
+  font-size: 18px; color: var(--text-dim); font-weight: 500;
+  max-width: 560px; line-height: 1.6; margin-bottom: 44px;
+}
+.s8-url {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px; font-weight: 600;
+  letter-spacing: .2em; color: rgba(255,255,255,.3);
+  text-transform: uppercase; margin-bottom: 48px;
+}
+.s8-git {
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px 32px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  background: rgba(255,255,255,.02);
+}
+.s8-git-logo { height: 22px; opacity: .6; }
+.s8-git-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: .25em;
+  color: rgba(255,255,255,.3);
+}
+
+/* ══════════════════════════════
+   SLIDE DOR — A DOR DO EMPRESÁRIO
+══════════════════════════════ */
+.s-dor-layout {
+  position: relative; z-index: 10;
+  width: 100%; height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 56px 80px;
+  text-align: center;
+}
+.s-dor-h1 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 62px; font-weight: 900;
+  letter-spacing: -.04em; line-height: .95;
+  margin-bottom: 18px;
+}
+.s-dor-sub {
+  font-size: 16px; color: var(--text-dim);
+  margin-bottom: 44px; line-height: 1.6;
+  max-width: 640px;
+}
+.s-dor-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 14px; width: 100%;
+}
+.s-dor-card {
+  padding: 22px 18px;
+  border: 1px solid rgba(239,68,68,.12);
+  border-radius: 12px;
+  background: rgba(239,68,68,.03);
+  display: flex; flex-direction: column; gap: 10px;
+  text-align: left;
+}
+.s-dor-card-icon {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: rgba(239,68,68,.12);
+  border: 1px solid rgba(239,68,68,.22);
+  display: flex; align-items: center; justify-content: center;
+}
+.s-dor-card-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px; font-weight: 800;
+  letter-spacing: -.01em; line-height: 1.25;
+  color: var(--text-main);
+}
+.s-dor-card-desc {
+  font-size: 11px; color: var(--text-dim);
+  line-height: 1.55;
+}
+
+@media print {
+  body { background: var(--bg); }
+  .slide { margin: 0; page-break-after: always; break-after: page; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════ SLIDE 1 — COVER ══════ -->
+<div class="slide">
+  <div class="glow glow-tr"></div>
+  <div class="glow glow-bl"></div>
+  <div class="s1-content">
+    <div class="s1-badge"><div class="pulse"></div> Chega de ter que fazer tudo</div>
+    <h1 class="s1-h1 font-heading">
+      <span style="color:rgba(240,246,252,.9)">Você decide.</span><br>
+      <span class="text-shiny">Seu time resolve.</span>
+    </h1>
+    <p class="s1-sub">
+      Uma equipe completa de especialistas trabalhando 24h pelo seu negócio — sem contratar ninguém, sem reunião de briefing.
+    </p>
+    <div class="s1-footer-row">
+      <span class="s1-by">Um produto do</span>
+      <div class="s1-divider"></div>
+      <img src="./logogit.png" alt="Grupo Ideal Trends" class="s1-logo">
+    </div>
+  </div>
+  <div class="slide-num">01 / 09</div>
+</div>
+
+<!-- ══════ SLIDE 2 — DOR DO EMPRESÁRIO ══════ -->
+<div class="slide">
+  <div class="glow glow-tr" style="background:rgba(239,68,68,.08)"></div>
+  <div class="glow glow-bl" style="background:rgba(239,68,68,.05)"></div>
+  <div class="s-dor-layout">
+    <p class="label" style="margin-bottom:20px;color:#ef4444">A realidade de quem toca empresa</p>
+    <h1 class="s-dor-h1 font-heading">
+      <span style="color:rgba(240,246,252,.9)">Você tem a visão.</span><br>
+      <span style="color:rgba(255,255,255,.32)">Mas quem vai executar?</span>
+    </h1>
+    <p class="s-dor-sub">Contratar é caro. Agência demora. Fazer sozinho esgota.<br>E a empresa para enquanto você apaga incêndio.</p>
+    <div class="s-dor-grid">
+      <div class="s-dor-card">
+        <div class="s-dor-card-icon">
+          <svg width="16" height="16" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="s-dor-card-title">Semanas esperando por uma agência</div>
+        <div class="s-dor-card-desc">Briefing, reunião, revisão, atraso. Um site simples leva meses — e ainda pode vir errado.</div>
+      </div>
+      <div class="s-dor-card">
+        <div class="s-dor-card-icon">
+          <svg width="16" height="16" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div class="s-dor-card-title">R$5.000 a R$30.000 por entrega</div>
+        <div class="s-dor-card-desc">Marketing, TI, consultoria financeira — cada área tem seu custo. E o caixa vai junto.</div>
+      </div>
+      <div class="s-dor-card">
+        <div class="s-dor-card-icon">
+          <svg width="16" height="16" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="s-dor-card-title">Contratar, treinar e começar de novo</div>
+        <div class="s-dor-card-desc">Cada funcionário novo é meses de custo antes de produzir qualquer resultado.</div>
+      </div>
+      <div class="s-dor-card">
+        <div class="s-dor-card-icon">
+          <svg width="16" height="16" fill="none" stroke="#ef4444" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div class="s-dor-card-title">Você faz tudo — e a empresa não escala</div>
+        <div class="s-dor-card-desc">O empresário vira operacional e perde o foco no que realmente faz crescer.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">02 / 09</div>
+  <div class="brand-corner">Ideal <em>OS</em></div>
+</div>
+
+<!-- ══════ SLIDE 3 — O QUE É ══════ -->
+<div class="slide">
+  <div class="glow glow-tr"></div>
+  <div class="s2-layout">
+    <div class="s2-left">
+      <p class="label" style="margin-bottom:20px">O que é o Ideal OS</p>
+      <h2 class="s2-h2 font-heading">Time completo. <span class="text-accent">Sem contratar ninguém.</span></h2>
+      <div class="s2-stat-row">
+        <div class="s2-stat"><span class="s2-stat-n">6</span><span class="s2-stat-l">Departamentos</span></div>
+        <div class="s2-stat"><span class="s2-stat-n">16</span><span class="s2-stat-l">Especialistas</span></div>
+        <div class="s2-stat"><span class="s2-stat-n">24h</span><span class="s2-stat-l">Por dia</span></div>
+      </div>
+      <div class="s2-pills">
+        <span class="s2-pill">Tecnologia</span>
+        <span class="s2-pill">Marketing</span>
+        <span class="s2-pill">Finanças</span>
+        <span class="s2-pill">Pessoas</span>
+        <span class="s2-pill">Estratégia</span>
+        <span class="s2-pill">Negócios</span>
+      </div>
+    </div>
+    <div class="s2-right">
+      <p class="s2-quote">"Você manda uma mensagem. Sua equipe assume. O resultado chega pronto."</p>
+      <p class="s2-desc">
+        O Ideal OS coloca departamentos digitais completos para trabalhar pelo seu negócio. Você descreve o que precisa — a equipe certa assume, distribui as tarefas, executa cada etapa na ordem certa e entrega nas suas mãos.
+      </p>
+      <p class="s2-desc" style="font-size:14px;color:var(--text-main);font-weight:600;border-left:2px solid var(--accent);padding-left:14px">
+        Sem contratar. Sem onboarding. Sem gerenciar. Só resultado.
+      </p>
+    </div>
+  </div>
+  <div class="slide-num">03 / 09</div>
+  <div class="brand-corner">Ideal <em>OS</em></div>
+</div>
+
+<!-- ══════ SLIDE 4 — DEPARTAMENTOS ══════ -->
+<div class="slide">
+  <div class="glow glow-tr"></div>
+  <div class="s3-layout">
+    <div class="s3-header">
+      <p class="label" style="margin-bottom:10px">O que o Ideal OS faz pelo seu negócio</p>
+      <h2 class="s3-title font-heading">6 Departamentos. <span class="text-accent">Todos os entregáveis.</span></h2>
+    </div>
+    <div class="s3-grid">
+      <div class="s3-card">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="s3-color-bar" style="background:#3B82F6"></div>
+          <span class="s3-badge">Ativo</span>
+        </div>
+        <div class="s3-card-title">Tecnologia &amp; Produto</div>
+        <div class="s3-card-desc">Sites, sistemas e páginas de vendas do zero ao publicado — com design, revisão e entrega completa.</div>
+        <div class="s3-outputs">
+          <span class="s3-out">Site</span><span class="s3-out">Landing Page</span><span class="s3-out">Sistema</span><span class="s3-out">App</span>
+        </div>
+      </div>
+      <div class="s3-card">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="s3-color-bar" style="background:#a855f7"></div>
+          <span class="s3-badge">Ativo</span>
+        </div>
+        <div class="s3-card-title">Crescimento &amp; Marketing</div>
+        <div class="s3-card-desc">Campanhas, páginas de alta conversão e sequências de comunicação que vendem enquanto você dorme.</div>
+        <div class="s3-outputs">
+          <span class="s3-out">Campanha</span><span class="s3-out">Copy</span><span class="s3-out">E-mail</span><span class="s3-out">Funil</span>
+        </div>
+      </div>
+      <div class="s3-card">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="s3-color-bar" style="background:#10b981"></div>
+          <span class="s3-badge">Ativo</span>
+        </div>
+        <div class="s3-card-title">Inteligência de Negócios</div>
+        <div class="s3-card-desc">Dashboards e análises que transformam números em decisões. Saiba onde seu dinheiro está rendendo — e onde está vazando.</div>
+        <div class="s3-outputs">
+          <span class="s3-out">Dashboard</span><span class="s3-out">Relatório</span><span class="s3-out">Análise</span>
+        </div>
+      </div>
+      <div class="s3-card">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="s3-color-bar" style="background:#f59e0b"></div>
+          <span class="s3-badge">Ativo</span>
+        </div>
+        <div class="s3-card-title">Finanças &amp; Controladoria</div>
+        <div class="s3-card-desc">Controle de caixa, análise de ROI e planejamento para pagar menos e ganhar mais.</div>
+        <div class="s3-outputs">
+          <span class="s3-out">DRE</span><span class="s3-out">Fluxo de Caixa</span><span class="s3-out">ROI</span>
+        </div>
+      </div>
+      <div class="s3-card">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="s3-color-bar" style="background:#ec4899"></div>
+          <span class="s3-badge">Ativo</span>
+        </div>
+        <div class="s3-card-title">Pessoas &amp; Cultura</div>
+        <div class="s3-card-desc">Contratação, cultura e estrutura de cargos — para o negócio crescer sem depender só de você.</div>
+        <div class="s3-outputs">
+          <span class="s3-out">Manual</span><span class="s3-out">Processo Seletivo</span><span class="s3-out">Plano de Cargos</span>
+        </div>
+      </div>
+      <div class="s3-card">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div class="s3-color-bar" style="background:#ef4444"></div>
+          <span class="s3-badge">Ativo</span>
+        </div>
+        <div class="s3-card-title">Estratégia &amp; Expansão</div>
+        <div class="s3-card-desc">Novos mercados, análise de concorrentes e plano de crescimento com metas claras.</div>
+        <div class="s3-outputs">
+          <span class="s3-out">Plano Estratégico</span><span class="s3-out">Análise Competitiva</span><span class="s3-out">Metas</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">04 / 09</div>
+  <div class="brand-corner">Ideal <em>OS</em></div>
+</div>
+
+<!-- ══════ SLIDE 5 — COMO FUNCIONA ══════ -->
+<div class="slide">
+  <div class="glow glow-tr"></div>
+  <div class="s4b-layout">
+    <div class="s3-header" style="margin-bottom:28px">
+      <p class="label" style="margin-bottom:10px">Como funciona</p>
+      <h2 class="s3-title font-heading">Três passos. <span class="text-accent">Do pedido ao resultado.</span></h2>
+    </div>
+    <div class="s4b-cols">
+
+      <!-- Passo 1 -->
+      <div class="s4b-step">
+        <div class="s4b-num">01 — Você pede</div>
+        <div class="s4b-icon">
+          <svg width="26" height="26" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div class="s4b-title">Você diz o que precisa</div>
+        <div class="s4b-desc">Sem formulário, sem reunião de briefing. Escreve o que precisa em linguagem simples — como se fosse mandar uma mensagem para um funcionário de confiança.</div>
+        <div class="s4b-items">
+          <div class="s4b-item"><div class="s4b-item-dot"></div>"Cria uma landing page para meu produto"</div>
+          <div class="s4b-item"><div class="s4b-item-dot"></div>"Monta uma campanha de lançamento"</div>
+          <div class="s4b-item"><div class="s4b-item-dot"></div>"Analisa meu fluxo de caixa do mês"</div>
+        </div>
+      </div>
+
+      <div class="s4b-arrow">›</div>
+
+      <!-- Passo 2 -->
+      <div class="s4b-step highlight">
+        <div class="s4b-num">02 — Sua equipe age</div>
+        <div class="s4b-icon">
+          <svg width="26" height="26" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <div class="s4b-title">Os especialistas assumem</div>
+        <div class="s4b-desc">O departamento certo é ativado automaticamente. Cada especialista faz a sua parte, na ordem certa, sem você precisar acompanhar cada etapa.</div>
+        <div class="s4b-items">
+          <div class="s4b-item"><div class="s4b-item-dot"></div>6 departamentos disponíveis 24h</div>
+          <div class="s4b-item"><div class="s4b-item-dot"></div>Coordenação automática entre especialistas</div>
+          <div class="s4b-item"><div class="s4b-item-dot"></div>Você acompanha tudo ao vivo</div>
+        </div>
+      </div>
+
+      <div class="s4b-arrow">›</div>
+
+      <!-- Passo 3 -->
+      <div class="s4b-step">
+        <div class="s4b-num">03 — Resultado pronto</div>
+        <div class="s4b-icon">
+          <svg width="26" height="26" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        </div>
+        <div class="s4b-title">Entrega nas suas mãos</div>
+        <div class="s4b-desc">Você recebe o resultado completo e pronto para usar. Site no ar, campanha rodando, relatório na tela — sem retrabalho, sem revisão infinita.</div>
+        <div class="s4b-items">
+          <div class="s4b-item"><div class="s4b-item-dot"></div>Resultado completo, funcional e pronto</div>
+          <div class="s4b-item"><div class="s4b-item-dot"></div>Histórico salvo para o próximo pedido</div>
+          <div class="s4b-item"><div class="s4b-item-dot"></div>Solicita ajuste com uma mensagem</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  <div class="slide-num">05 / 09</div>
+  <div class="brand-corner">Ideal <em>OS</em></div>
+</div>
+
+<!-- ══════ SLIDE 6 — RESULTADOS ══════ -->
+<div class="slide">
+  <div class="glow glow-tr"></div>
+  <div class="s6-layout">
+    <div class="s3-header" style="margin-bottom:28px">
+      <p class="label" style="margin-bottom:10px">O impacto no seu negócio</p>
+      <h2 class="s3-title font-heading">O que muda quando você para <span class="text-accent">de fazer tudo.</span></h2>
+    </div>
+    <div class="s6-grid">
+      <div class="s6-item">
+        <div class="s6-icon"><svg width="16" height="16" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div>
+        <div class="s6-title">Você vê acontecendo</div>
+        <div class="s6-desc">Acompanhe cada especialista trabalhando ao vivo — quem está fazendo o quê e o que já foi concluído.</div>
+      </div>
+      <div class="s6-item">
+        <div class="s6-icon"><svg width="16" height="16" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+        <div class="s6-title">Resultado pronto para usar</div>
+        <div class="s6-desc">Site, página ou sistema completo — com design profissional e funcionando no celular.</div>
+      </div>
+      <div class="s6-item">
+        <div class="s6-icon"><svg width="16" height="16" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div>
+        <div class="s6-title">Resultado em minutos</div>
+        <div class="s6-desc">O que levaria semanas com uma agência sai em minutos. Primeiro entregável em menos de 5 minutos.</div>
+      </div>
+      <div class="s6-item">
+        <div class="s6-icon"><svg width="16" height="16" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <div class="s6-title">Custo fixo zero</div>
+        <div class="s6-desc">Sem salário, encargos, férias ou 13°. Você paga pelos créditos que usar — e eles nunca vencem.</div>
+      </div>
+      <div class="s6-item">
+        <div class="s6-icon"><svg width="16" height="16" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        <div class="s6-title">Lembra da sua empresa</div>
+        <div class="s6-desc">Não precisa explicar de novo toda vez. O Ideal OS guarda o contexto e o histórico.</div>
+      </div>
+      <div class="s6-item">
+        <div class="s6-icon"><svg width="16" height="16" fill="none" stroke="#3B82F6" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></div>
+        <div class="s6-title">Escala com você</div>
+        <div class="s6-desc">Seus créditos crescem com a empresa. Sem reajuste de contrato, sem nova negociação — é só usar mais.</div>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">06 / 09</div>
+  <div class="brand-corner">Ideal <em>OS</em></div>
+</div>
+
+<!-- ══════ SLIDE 7 — CRÉDITOS ══════ -->
+<div class="slide">
+  <div class="glow glow-tr"></div>
+  <div class="s-plans-layout">
+    <div class="s3-header" style="margin-bottom:16px">
+      <p class="label" style="margin-bottom:10px">Investimento</p>
+      <h2 class="s3-title font-heading">Pague pelo resultado. <span class="text-accent">Não pelo mês.</span></h2>
+    </div>
+
+    <!-- Referência: o que vocês cobram vs mercado -->
+    <div class="s-cred-ref">
+      <div class="s-cred-ref-item">
+        <div class="s-cred-ref-label">Landing Page</div>
+        <div class="s-cred-ref-val">R$2.000 <span>· agência cobra R$5.000–8.000</span></div>
+      </div>
+      <div class="s-cred-ref-item">
+        <div class="s-cred-ref-label">Site Completo</div>
+        <div class="s-cred-ref-val">R$8.000 <span>· agência cobra R$15.000–30.000</span></div>
+      </div>
+      <div class="s-cred-ref-item">
+        <div class="s-cred-ref-label">Campanha de Marketing</div>
+        <div class="s-cred-ref-val">R$1.500 <span>· agência cobra R$3.000–5.000</span></div>
+      </div>
+      <div class="s-cred-ref-item">
+        <div class="s-cred-ref-label">Análise Financeira</div>
+        <div class="s-cred-ref-val">R$800 <span>· consultoria cobra R$2.500–4.000</span></div>
+      </div>
+      <div class="s-cred-ref-item">
+        <div class="s-cred-ref-label">Plano Estratégico</div>
+        <div class="s-cred-ref-val">R$5.000 <span>· consultoria cobra R$10.000–20.000</span></div>
+      </div>
+      <div class="s-cred-ref-item">
+        <div class="s-cred-ref-label">Relatório de BI</div>
+        <div class="s-cred-ref-val">R$600 <span>· analista cobra R$2.000–5.000</span></div>
+      </div>
+    </div>
+
+    <div class="s-plans-grid">
+
+      <!-- PACK INICIAL -->
+      <div class="s-plan">
+        <div class="s-plan-name">Pack Inicial</div>
+        <div class="s-plan-price">
+          <span class="currency">R$</span>1.497
+        </div>
+        <div class="s-plan-tagline" style="font-size:13px;font-weight:700;color:var(--text-main)">200 créditos &nbsp;<span style="font-weight:400;color:var(--text-dim);font-size:11px">≈ R$7,49/crédito</span></div>
+        <div style="font-size:11px;color:#34d399;font-weight:600;margin-top:2px;margin-bottom:10px">Equivale a ≈ R$80.000 em serviços de mercado</div>
+        <div class="s-plan-divider"></div>
+        <div class="s-plan-features">
+          <div class="s-plan-feat"><div class="s-plan-feat-dot"></div><span>Acesso a <strong>todos os 6 departamentos</strong></span></div>
+          <div class="s-plan-feat"><div class="s-plan-feat-dot"></div><span>Créditos <strong>nunca vencem</strong></span></div>
+          <div class="s-plan-feat"><div class="s-plan-feat-dot"></div><span>Memória da empresa salva</span></div>
+          <div class="s-plan-feat"><div class="s-plan-feat-dot"></div><span>Acompanhamento ao vivo</span></div>
+        </div>
+        <div class="s-plan-note">≈ R$80.000 em serviços pelo preço de R$1.497</div>
+      </div>
+
+      <!-- PACK EMPRESA (destaque) -->
+      <div class="s-plan featured">
+        <div class="s-plan-tag">Mais popular</div>
+        <div class="s-plan-name">Pack Empresa</div>
+        <div class="s-plan-price">
+          <span class="currency">R$</span>2.997
+        </div>
+        <div class="s-plan-tagline" style="font-size:13px;font-weight:700;color:var(--text-main)">600 créditos &nbsp;<span style="font-weight:400;color:var(--text-dim);font-size:11px">≈ R$4,99/crédito</span></div>
+        <div style="font-size:11px;color:#34d399;font-weight:600;margin-top:2px;margin-bottom:10px">Equivale a ≈ R$240.000 em serviços de mercado</div>
+        <div class="s-plan-divider"></div>
+        <div class="s-plan-features">
+          <div class="s-plan-feat"><div class="s-plan-feat-dot"></div><span>Acesso a <strong>todos os 6 departamentos</strong></span></div>
+          <div class="s-plan-feat"><div class="s-plan-feat-dot"></div><span>Créditos <strong>nunca vencem</strong></span></div>
+          <div class="s-plan-feat"><div class="s-plan-feat-dot"></div><span>Memória avançada + histórico completo</span></div>
+          <div class="s-plan-feat"><div class="s-plan-feat-dot"></div><span>Projetos com pipeline completo de 6 etapas</span></div>
+        </div>
+        <div class="s-plan-note">≈ R$240.000 em serviços pelo preço de R$2.997</div>
+      </div>
+
+      <!-- PACK ESCALA -->
+      <div class="s-plan">
+        <div class="s-plan-name">Pack Escala</div>
+        <div class="s-plan-price">
+          <span class="currency">R$</span>5.997
+        </div>
+        <div class="s-plan-tagline" style="font-size:13px;font-weight:700;color:var(--text-main)">2.000 créditos &nbsp;<span style="font-weight:400;color:var(--text-dim);font-size:11px">≈ R$3,00/crédito</span></div>
+        <div style="font-size:11px;color:#34d399;font-weight:600;margin-top:2px;margin-bottom:10px">Equivale a ≈ R$800.000 em serviços de mercado</div>
+        <div class="s-plan-divider"></div>
+        <div class="s-plan-features">
+          <div class="s-plan-feat"><div class="s-plan-feat-dot"></div><span>Acesso a <strong>todos os 6 departamentos</strong></span></div>
+          <div class="s-plan-feat"><div class="s-plan-feat-dot"></div><span>Créditos <strong>nunca vencem</strong></span></div>
+          <div class="s-plan-feat"><div class="s-plan-feat-dot"></div><span>Memória avançada + multi-projeto</span></div>
+          <div class="s-plan-feat"><div class="s-plan-feat-dot"></div><span>Suporte prioritário via WhatsApp</span></div>
+        </div>
+        <div class="s-plan-note">≈ R$800.000 em serviços pelo preço de R$5.997</div>
+      </div>
+
+    </div>
+    <div class="s-plans-footnote">Quanto mais créditos, menor o preço por entrega · Créditos nunca vencem · Adicione mais a qualquer momento</div>
+  </div>
+  <div class="slide-num">07 / 09</div>
+  <div class="brand-corner">Ideal <em>OS</em></div>
+</div>
+
+<!-- ══════ SLIDE 8 — GRUPO IDEAL TRENDS ══════ -->
+<div class="slide">
+  <div class="glow glow-tr"></div>
+  <div class="s7-layout">
+    <div class="s7-left">
+      <img src="./logogit.png" alt="Grupo Ideal Trends" class="s7-logo">
+      <div class="s7-stats">
+        <div class="s7-stat-row">
+          <span class="s7-stat-lbl">Fundado em</span>
+          <span class="s7-stat-val">1995</span>
+        </div>
+        <div class="s7-stat-row">
+          <span class="s7-stat-lbl">Empresas</span>
+          <span class="s7-stat-val">30<span>+</span></span>
+        </div>
+        <div class="s7-stat-row">
+          <span class="s7-stat-lbl">Países</span>
+          <span class="s7-stat-val">40</span>
+        </div>
+        <div class="s7-stat-row">
+          <span class="s7-stat-lbl">Clientes</span>
+          <span class="s7-stat-val">130<span>mil+</span></span>
+        </div>
+      </div>
+    </div>
+    <div class="s7-right">
+      <p class="label">Quem está por trás do Ideal OS</p>
+      <h2 class="s7-h2 font-heading">Grupo<br>Ideal Trends</h2>
+      <p class="s7-tagline">30 anos transformando negócios reais — em 40 países.</p>
+      <p class="s7-desc">
+        Fundado por José Paulo em 1995, o Grupo Ideal Trends é um holding com 30+ empresas e presença em 40 países. São 130.000 clientes e quase três décadas de negócios reais — não de teoria.
+      </p>
+      <p class="s7-desc">
+        O Ideal OS nasce dessa experiência. Uma plataforma construída por quem já viveu os desafios de escalar uma empresa, para colocar nas mãos de qualquer empresário o poder de um time completo de especialistas.
+      </p>
+      <div class="s7-sectors">
+        <span class="s7-sector">Tecnologia</span>
+        <span class="s7-sector">Saúde</span>
+        <span class="s7-sector">Educação</span>
+        <span class="s7-sector">Marketing</span>
+        <span class="s7-sector">Finanças</span>
+        <span class="s7-sector">Imóveis</span>
+        <span class="s7-sector">Cosméticos</span>
+        <span class="s7-sector">Publicação</span>
+      </div>
+    </div>
+  </div>
+  <div class="slide-num">08 / 09</div>
+</div>
+
+<!-- ══════ SLIDE 9 — CTA FINAL ══════ -->
+<div class="slide">
+  <div class="glow glow-tr"></div>
+  <div class="glow glow-bl"></div>
+  <div class="s8-content">
+    <p class="label" style="margin-bottom:28px">Seu primeiro entregável em menos de 5 minutos</p>
+    <h1 class="s8-h1 font-heading">
+      <span style="color:rgba(240,246,252,.9)">Mande seu primeiro</span><br>
+      <span class="text-shiny">pedido agora.</span>
+    </h1>
+    <p class="s8-desc">
+      Sem cadastro complexo. Sem mensalidade. Créditos nunca vencem — você usa quando precisar e no que precisar.
+    </p>
+    <p class="s8-url" style="letter-spacing:.08em">Acesse agora → idealos.com.br</p>
+    <div class="s8-git">
+      <img src="./logogit.png" alt="Grupo Ideal Trends" class="s8-git-logo">
+      <span class="s8-git-text">Um produto do Grupo Ideal Trends</span>
+    </div>
+  </div>
+  <div class="slide-num">09 / 09</div>
+</div>
+
+</body>
+</html>
