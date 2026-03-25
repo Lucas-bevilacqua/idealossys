@@ -368,6 +368,7 @@ export default function App() {
   const [showDomainModal, setShowDomainModal] = useState(false);
   const [publishState, setPublishState] = useState<{ loading: boolean; publicUrl: string | null; customDomain: string | null; domainInput: string }>({ loading: false, publicUrl: null, customDomain: null, domainInput: '' });
   const [voiceInput, setVoiceInput] = useState('');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const globalScrollRef = useRef<HTMLDivElement>(null);
@@ -464,6 +465,15 @@ export default function App() {
         setIsPollingResults(false);
         setExecution({ plan: [], agentStatus: {}, agentActions: {}, activeAgent: null, done: false });
         clearActiveJobId();
+        // Server may have restarted — sync DB to restore any completed work
+        const [tks, arts, projs] = await Promise.all([
+          fetch('/api/tasks').then(r => r.ok ? r.json() : null),
+          fetch('/api/artifacts').then(r => r.ok ? r.json() : null),
+          fetch('/api/projects').then(r => r.ok ? r.json() : null),
+        ]);
+        if (Array.isArray(tks)) setTasks(tks);
+        if (Array.isArray(arts)) setArtifacts(arts);
+        if (Array.isArray(projs)) setProjects(projs);
         return;
       }
       setExecution(p => ({ ...p, done: true, activeAgent: null }));
@@ -1030,7 +1040,10 @@ export default function App() {
       
       {/* HEADER */}
       <header className="h-16 flex items-center justify-between px-6 border-b glass-panel z-[110]" style={{ borderColor: 'var(--border)' }}>
-        <Logo size="md" variant="footer" interactive onClick={() => setCurrentView('dashboard')} />
+        <div className="flex items-center gap-3">
+          <button onClick={() => setMobileMenuOpen(true)} className="md:hidden p-2 rounded-lg text-dim hover:text-white hover:bg-white/5" aria-label="Menu"><Menu size={20} /></button>
+          <Logo size="md" variant="footer" interactive onClick={() => setCurrentView('dashboard')} />
+        </div>
         <div className="flex items-center gap-4">
           <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/5 bg-white/[0.02] text-xs">
             <CreditCard size={12} className="text-accent" />
@@ -1041,6 +1054,29 @@ export default function App() {
         </div>
       </header>
 
+      {/* Mobile nav drawer */}
+      {mobileMenuOpen && (
+        <div className="fixed inset-0 z-[200] md:hidden">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setMobileMenuOpen(false)} />
+          <nav className="absolute left-0 top-0 bottom-0 w-64 glass-panel border-r flex flex-col py-6 px-4 gap-1" style={{ background: 'var(--sidebar)', borderColor: 'var(--border)' }}>
+            <div className="flex items-center justify-between mb-6 px-2">
+              <Logo size="md" variant="footer" />
+              <button onClick={() => setMobileMenuOpen(false)} className="p-2 rounded-lg text-dim hover:text-white hover:bg-white/5"><X size={16} /></button>
+            </div>
+            {navItems.map(item => (
+              <button key={item.id} onClick={() => { if (item.id === 'landing') setAuthState('landing'); else setCurrentView(item.id as any); setMobileMenuOpen(false); }} className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all text-sm font-medium ${currentView === item.id && authState === 'app' ? 'bg-accent text-white shadow-lg' : 'text-dim hover:bg-white/5 hover:text-main'}`}>
+                <item.icon size={18} />
+                <span>{item.label}</span>
+              </button>
+            ))}
+            <div className="mt-auto pt-4 border-t border-white/5 flex flex-col gap-1">
+              <button onClick={() => { setCurrentView('profile'); setMobileMenuOpen(false); }} className={`flex items-center gap-3 px-4 py-3 rounded-2xl transition-all text-sm font-medium ${currentView === 'profile' ? 'bg-accent text-white' : 'text-dim hover:bg-white/5 hover:text-main'}`}><Settings size={18} /><span>Perfil</span></button>
+              <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-medium text-dim hover:text-red-400 hover:bg-red-400/10 transition-all"><LogOut size={18} /><span>Sair</span></button>
+            </div>
+          </nav>
+        </div>
+      )}
+
       <div className="flex flex-1 overflow-hidden relative">
         <nav className="hidden md:flex flex-col w-20 items-center py-8 gap-6 border-r glass-panel" style={{ background: 'var(--sidebar)', borderColor: 'var(--border)' }}>
           {navItems.map(item => (
@@ -1048,7 +1084,7 @@ export default function App() {
           ))}
         </nav>
 
-        <main className="flex-1 overflow-auto relative">
+        <main className="flex-1 overflow-auto relative pb-16 md:pb-0">
           {currentView === 'dashboard' && (
             <div className="p-10 max-w-6xl mx-auto animate-fade-in flex flex-col gap-8">
               <div className="flex justify-between items-center">
@@ -1720,6 +1756,20 @@ export default function App() {
           </motion.div>
         </div>
       )}
+
+      {/* Mobile bottom nav */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[150] flex items-center justify-around h-16 border-t glass-panel" style={{ background: 'var(--sidebar)', borderColor: 'var(--border)' }}>
+        {[navItems[0], navItems[2], navItems[3]].map(item => (
+          <button key={item.id} onClick={() => setCurrentView(item.id as any)} className={`flex flex-col items-center gap-1 py-2 px-4 rounded-xl transition-all ${currentView === item.id && authState === 'app' ? 'text-accent' : 'text-dim'}`}>
+            <item.icon size={22} />
+            <span className="text-[9px] font-black uppercase tracking-wider">{item.label}</span>
+          </button>
+        ))}
+        <button onClick={() => setMobileMenuOpen(true)} className={`flex flex-col items-center gap-1 py-2 px-4 rounded-xl transition-all ${mobileMenuOpen ? 'text-accent' : 'text-dim'}`}>
+          <Menu size={22} />
+          <span className="text-[9px] font-black uppercase tracking-wider">Menu</span>
+        </button>
+      </nav>
 
       {showTaskModal && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm px-6" onClick={() => setShowTaskModal(false)}>
