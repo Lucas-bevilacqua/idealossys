@@ -189,6 +189,72 @@ def _strip_code_fences(html: str) -> str:
 from ._fix_html import validate_and_fix_html as _validate_and_fix_html
 
 
+def _split_html_files(html: str, project_id: str) -> tuple[str, str, str]:
+    """
+    Split a self-contained HTML into separate index.html, styles.css, main.js.
+    Returns (html_code, css_code, js_code).
+    Inline <style> blocks (excluding @import/font rules) are extracted to styles.css.
+    Inline <script> blocks (no src attribute) are extracted to main.js.
+    External <link> and <script src=...> tags are kept in HTML.
+    """
+    import re
+
+    # ── Extract inline <style> blocks ──────────────────────────────────────────
+    css_parts: list[str] = []
+    style_link = f'<link rel="stylesheet" href="styles.css">'
+
+    def _extract_style(m: re.Match) -> str:
+        css_parts.append(m.group(1).strip())
+        return ""  # remove original tag
+
+    html_no_styles = re.sub(
+        r"<style[^>]*>(.*?)</style>",
+        _extract_style,
+        html,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+
+    # ── Extract inline <script> blocks (no src="...") ─────────────────────────
+    js_parts: list[str] = []
+    script_tag = '<script src="main.js"></script>'
+
+    def _extract_script(m: re.Match) -> str:
+        # Keep external scripts (src="...") in HTML
+        if m.group(1) and "src=" in m.group(1).lower():
+            return m.group(0)
+        js_parts.append(m.group(2).strip())
+        return ""
+
+    html_no_scripts = re.sub(
+        r"<script([^>]*)>(.*?)</script>",
+        _extract_script,
+        html_no_styles,
+        flags=re.DOTALL | re.IGNORECASE,
+    )
+
+    css_code = "\n\n".join(css_parts)
+    js_code = "\n\n".join(js_parts)
+
+    if not css_code and not js_code:
+        # Nothing extracted — return original intact
+        return html, "", ""
+
+    # ── Inject <link> before </head> and <script> before </body> ───────────────
+    if css_code:
+        if "</head>" in html_no_scripts:
+            html_no_scripts = html_no_scripts.replace("</head>", f"  {style_link}\n</head>", 1)
+        else:
+            html_no_scripts = style_link + "\n" + html_no_scripts
+
+    if js_code:
+        if "</body>" in html_no_scripts:
+            html_no_scripts = html_no_scripts.replace("</body>", f"  {script_tag}\n</body>", 1)
+        else:
+            html_no_scripts = html_no_scripts + "\n" + script_tag
+
+    return html_no_scripts, css_code, js_code
+
+
 def make_tools(tenant_id: str, event_queue: asyncio.Queue = None) -> List:
     """
     Create tool functions bound to a specific tenant_id.
@@ -863,6 +929,9 @@ Minimum 600 lines. Return ONLY HTML starting with <!DOCTYPE html>
             avatars=avatars,
         )
 
+        # ── Split into separate HTML / CSS / JS files ─────────────────────────
+        html_code, css_code, js_code = _split_html_files(html_code, project_id)
+
         artifact = await db.create_artifact(
             tenant_id=tenant_id,
             title="index.html",
@@ -872,6 +941,28 @@ Minimum 600 lines. Return ONLY HTML starting with <!DOCTYPE html>
             project_id=project_id,
             filepath="index.html",
         )
+
+        if css_code:
+            await db.create_artifact(
+                tenant_id=tenant_id,
+                title="styles.css",
+                language="css",
+                code=css_code,
+                artifact_type="css",
+                project_id=project_id,
+                filepath="styles.css",
+            )
+
+        if js_code:
+            await db.create_artifact(
+                tenant_id=tenant_id,
+                title="main.js",
+                language="javascript",
+                code=js_code,
+                artifact_type="javascript",
+                project_id=project_id,
+                filepath="main.js",
+            )
 
         if event_queue:
             await event_queue.put({
@@ -888,8 +979,9 @@ Minimum 600 lines. Return ONLY HTML starting with <!DOCTYPE html>
                 }},
             })
 
+        files_info = "index.html" + (", styles.css" if css_code else "") + (", main.js" if js_code else "")
         lines_count = len(html_code.split("\n"))
-        return f"✅ Landing page premium gerada! {lines_count} linhas de HTML. Artifact ID: {artifact['id']}. Disponível na aba Projetos."
+        return f"✅ Landing page premium gerada! {lines_count} linhas. Arquivos: {files_info}. Artifact ID: {artifact['id']}. Disponível na aba Projetos."
 
     async def analyze_website(url: str = "") -> str:
         """
@@ -1107,6 +1199,22 @@ Minimum 600 lines. Return ONLY HTML starting with <!DOCTYPE html>
         existing_code = latest.get("code", "")
         pid = project_id or latest.get("projectId", "")
 
+        # If the HTML references external styles.css / main.js, reconstruct full inline HTML
+        # so Gemini can see all the code when editing.
+        all_artifacts = await db.get_artifacts_by_project(pid) if pid else []
+        css_artifact = next((a for a in all_artifacts if a.get("filepath") == "styles.css"), None)
+        js_artifact = next((a for a in all_artifacts if a.get("filepath") == "main.js"), None)
+        if css_artifact or js_artifact:
+            # Inline CSS and JS back so Gemini can edit them
+            full_code = existing_code
+            if css_artifact:
+                css_block = f"<style>\n{css_artifact.get('code', '')}\n</style>"
+                full_code = full_code.replace('<link rel="stylesheet" href="styles.css">', css_block, 1)
+            if js_artifact:
+                js_block = f"<script>\n{js_artifact.get('code', '')}\n</script>"
+                full_code = full_code.replace('<script src="main.js"></script>', js_block, 1)
+            existing_code = full_code
+
         # Get company context
         tenant = await db.get_tenant(tenant_id)
         company_name = tenant.get("name", "Empresa") if tenant else "Empresa"
@@ -1134,7 +1242,15 @@ RULES:
         if updated_html.startswith("<!--") or ("<!DOCTYPE" not in updated_html and "<html" not in updated_html):
             return f"Erro: Gemini não retornou HTML válido ({updated_html[:120]}). Tente novamente."
 
-        # UPDATE the existing artifact in-place (same ID → frontend updates the open viewer)
+        # Re-split into separate files if the project uses multi-file structure
+        if css_artifact or js_artifact:
+            updated_html, updated_css, updated_js = _split_html_files(updated_html, pid)
+            if updated_css and css_artifact:
+                await db.update_artifact_code(artifact_id=css_artifact["id"], code=updated_css)
+            if updated_js and js_artifact:
+                await db.update_artifact_code(artifact_id=js_artifact["id"], code=updated_js)
+
+        # UPDATE the existing HTML artifact in-place (same ID → frontend updates the open viewer)
         artifact_id = latest["id"]
         await db.update_artifact_code(artifact_id=artifact_id, code=updated_html)
 

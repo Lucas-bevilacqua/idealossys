@@ -18,7 +18,7 @@ load_dotenv()
 if not os.getenv("GOOGLE_API_KEY") and os.getenv("GEMINI_API_KEY"):
     os.environ["GOOGLE_API_KEY"] = os.environ["GEMINI_API_KEY"]
 
-from fastapi import FastAPI, Request, Depends
+from fastapi import FastAPI, Request, Depends, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import HTMLResponse
@@ -165,7 +165,16 @@ async def custom_domain_middleware(request: Request, call_next):
             project = await db_inst.get_project_by_domain(host)
             if project:
                 artifacts = await db_inst.get_artifacts_by_project(project["id"])
-                html_art = next((a for a in artifacts if a.get("language") == "html"), None)
+                # Serve a static file (CSS/JS) if path matches a known artifact filepath
+                req_file = path.lstrip("/") or "index.html"
+                file_art = next((a for a in artifacts if a.get("filepath") == req_file), None)
+                if file_art:
+                    _mime = {"css": "text/css", "js": "application/javascript", "html": "text/html"}
+                    ext = req_file.rsplit(".", 1)[-1].lower() if "." in req_file else "html"
+                    ct = _mime.get(ext, "text/plain")
+                    return Response(content=file_art.get("code", ""), media_type=ct, headers=_ARTIFACT_HEADERS)
+                # Fallback: serve index.html for root/unknown paths
+                html_art = next((a for a in artifacts if a.get("filepath") == "index.html" or a.get("language") == "html"), None)
                 if html_art:
                     return HTMLResponse(content=html_art.get("code", ""), status_code=200, headers=_ARTIFACT_HEADERS)
     return await call_next(request)
@@ -194,13 +203,35 @@ async def serve_project_page(project_id: str):
     """Serve landing page HTML publicly — client points domain to this server"""
     db_inst = Database()
     artifacts = await db_inst.get_artifacts_by_project(project_id)
-    html_art = next((a for a in artifacts if a.get("language") == "html"), None)
+    html_art = next((a for a in artifacts if a.get("filepath") == "index.html" or a.get("language") == "html"), None)
     if not html_art:
         return HTMLResponse("<h1>Página não encontrada</h1>", status_code=404, headers=_ARTIFACT_HEADERS)
     html = html_art.get("code") or ""
     if not html:
         return HTMLResponse("<h1>Conteúdo indisponível</h1>", status_code=404, headers=_ARTIFACT_HEADERS)
     return HTMLResponse(content=html, status_code=200, headers=_ARTIFACT_HEADERS)
+
+
+@app.get("/p/{project_id}/{filename}")
+async def serve_project_file(project_id: str, filename: str):
+    """Serve CSS/JS/other static files for a deployed project"""
+    _mime = {
+        "css": "text/css",
+        "js": "application/javascript",
+        "json": "application/json",
+        "svg": "image/svg+xml",
+        "txt": "text/plain",
+    }
+    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    content_type = _mime.get(ext, "text/plain")
+
+    db_inst = Database()
+    artifacts = await db_inst.get_artifacts_by_project(project_id)
+    file_art = next((a for a in artifacts if a.get("filepath") == filename), None)
+    if not file_art:
+        return Response("Not found", status_code=404)
+    code = file_art.get("code") or ""
+    return Response(content=code, media_type=content_type, headers=_ARTIFACT_HEADERS)
 
 
 # ── Frontend (React SPA) ──────────────────────────────────────────────────────
