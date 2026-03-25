@@ -614,7 +614,7 @@ async def agent_stream(request: Request, current_user: dict = Depends(get_curren
         # Se há briefing pendente e o usuário não está pedindo uma nova criação,
         # qualquer resposta é tratada como confirmação (usuário respondeu as perguntas do Hélio)
         _is_negative = any(w in user_input.lower() for w in ["não quero", "nao quero", "cancela", "esquece", "para tudo"])
-        if has_briefing and not is_creation and not _is_negative:
+        if has_briefing and not _is_negative:
             is_confirm = True
         print(f"[ROUTE] is_creation={is_creation} has_briefing={has_briefing} is_confirm={is_confirm}")
 
