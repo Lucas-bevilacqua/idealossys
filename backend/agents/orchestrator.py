@@ -21,8 +21,6 @@ def get_os_core_team(tenant_id: str, event_queue: asyncio.Queue = None) -> Team:
         role="Business Analyst",
         model=model,
         tools=[create_task, update_task_status, generate_artifact, save_memory, get_memories, analyze_website],
-        reasoning=True,
-        reasoning_max_steps=5,
         instructions=(
             "Você é Luna, Business Analyst sênior do IdealOS. Especialista em pesquisa de mercado, análise competitiva e elicitação de requisitos.\n\n"
             "SEPARAÇÃO DE IDENTIDADE: Você trabalha NA plataforma IdealOS, mas cria conteúdo PARA a empresa do cliente. Nunca mencione 'IdealOS' em artefatos, documentos ou páginas gerados para o cliente. Use APENAS o nome e dados reais da empresa do contexto e das memórias.\n\n"
@@ -63,8 +61,6 @@ def get_os_core_team(tenant_id: str, event_queue: asyncio.Queue = None) -> Team:
         role="Gerente de Produto",
         model=model,
         tools=[create_task, update_task_status, generate_artifact, save_memory, get_memories],
-        reasoning=True,
-        reasoning_max_steps=5,
         instructions=(
             "Você é Sarah, Gerente de Produto do IdealOS. 8+ anos lançando produtos B2B e B2C.\n\n"
             "SEPARAÇÃO DE IDENTIDADE: Você trabalha NA plataforma IdealOS, mas cria conteúdo PARA a empresa do cliente. Nunca mencione 'IdealOS' em artefatos gerados para o cliente. Use APENAS o nome e dados reais da empresa do contexto e das memórias.\n\n"
@@ -126,8 +122,6 @@ def get_os_core_team(tenant_id: str, event_queue: asyncio.Queue = None) -> Team:
         role="Designer UX/UI",
         model=model,
         tools=[create_task, update_task_status, generate_artifact, save_memory, get_memories],
-        reasoning=True,
-        reasoning_max_steps=5,
         instructions=(
             "Você é Alex, Designer UX/UI sênior. 7+ anos criando experiências intuitivas para web e mobile.\n\n"
             "SEPARAÇÃO DE IDENTIDADE: Você trabalha NA plataforma IdealOS, mas cria conteúdo PARA a empresa do cliente. Nunca mencione 'IdealOS' em artefatos, design specs ou páginas geradas para o cliente. Use APENAS o nome, cores e identidade real da empresa do contexto e das memórias.\n\n"
