@@ -22,40 +22,45 @@ const IconMap: Record<string, any> = { Terminal, Megaphone, Briefcase, DollarSig
 // --- SUB-COMPONENTS ---
 
 // Mapear agentId → agente real para avatares no chat e no bloco de interação
-// Female: no facial hair | Male: with beard (ensures visual gender distinction)
-const av = (seed: string, bg: string, female: boolean) =>
-  `https://api.dicebear.com/9.x/avataaars/svg?seed=${seed}&backgroundColor=${bg}&radius=50` +
-  (female ? '&facialHairProbability=0' : '&facialHairProbability=60&facialHair=beardMedium');
+// lorelei = estilo feminino ilustrado realista | adventurer = estilo masculino ilustrado realista
+const avF = (seed: string) =>
+  `https://api.dicebear.com/9.x/lorelei/svg?seed=${seed}&radius=50&backgroundColor=transparent`;
+const avM = (seed: string) =>
+  `https://api.dicebear.com/9.x/adventurer/svg?seed=${seed}&radius=50&backgroundColor=transparent`;
+
+// Hélio usa bottts (robô/IA) para destacar que é o orquestrador
+const avBot = (seed: string) =>
+  `https://api.dicebear.com/9.x/bottts/svg?seed=${seed}&radius=50&backgroundColor=3b82f6`;
 
 const AGENT_AVATAR_MAP: Record<string, { name: string; role: string; avatar: string; color: string }> = {
-  'pm':          { name: 'Sarah',    role: 'Product Manager',    avatar: av('SarahPM',    '6366f1', true),  color: '#6366f1' },
-  'ux':          { name: 'Alex',     role: 'UX Designer',        avatar: av('AlexUX',     '8b5cf6', false), color: '#8b5cf6' },
-  'dev-fe':      { name: 'Bruno',    role: 'Dev Frontend',       avatar: av('BrunoFE',    '06b6d4', false), color: '#06b6d4' },
-  'dev-be':      { name: 'Carla',    role: 'Dev Backend',        avatar: av('CarlaBE',    '10b981', true),  color: '#10b981' },
-  'qa':          { name: 'Diego',    role: 'QA Engineer',        avatar: av('DiegoQA',    'f59e0b', false), color: '#f59e0b' },
-  'devops':      { name: 'Elena',    role: 'DevOps & Cloud',     avatar: av('ElenaOps',   'ef4444', true),  color: '#ef4444' },
-  'os-core':     { name: 'OS Core',  role: 'Orquestrador',       avatar: 'https://api.dicebear.com/9.x/bottts/svg?seed=OSCore&backgroundColor=3b82f6&radius=50', color: '#3b82f6' },
-  'strat':       { name: 'Mariana',  role: 'Estrategista',       avatar: av('MarianaST',  'a855f7', true),  color: '#a855f7' },
-  'copy':        { name: 'João',     role: 'Copywriter',         avatar: av('JoaoCopy',   'f97316', false), color: '#f97316' },
-  'seo':         { name: 'Fernanda', role: 'SEO Specialist',     avatar: av('FernandaSEO','14b8a6', true),  color: '#14b8a6' },
-  'social':      { name: 'Ricardo',  role: 'Social Media',       avatar: av('RicardoSM',  'e879f9', false), color: '#e879f9' },
-  'sales':       { name: 'Mateus',   role: 'Sales',              avatar: av('MateusSales','0ea5e9', false), color: '#0ea5e9' },
-  'biz':         { name: 'Julia',    role: 'Business Analyst',   avatar: av('JuliaBiz',   '84cc16', true),  color: '#84cc16' },
-  'cfo':         { name: 'Roberto',  role: 'CFO / Financeiro',   avatar: av('RobertoCFO', '64748b', false), color: '#64748b' },
-  'hr':          { name: 'Patrícia', role: 'People & Culture',   avatar: av('PatriciaHR', 'ec4899', true),  color: '#ec4899' },
-  'ceo-ia':      { name: 'Hélio',    role: 'CEO / Orquestrador', avatar: av('HelioCEO',   '3b82f6', false), color: '#3b82f6' },
+  'pm':          { name: 'Sarah',    role: 'Product Manager',    avatar: avF('SarahPM2026'),    color: '#6366f1' },
+  'ux':          { name: 'Alex',     role: 'UX Designer',        avatar: avM('AlexUX2026'),     color: '#8b5cf6' },
+  'dev-fe':      { name: 'Bruno',    role: 'Dev Frontend',       avatar: avM('BrunoFE2026'),    color: '#06b6d4' },
+  'dev-be':      { name: 'Carla',    role: 'Dev Backend',        avatar: avF('CarlaBE2026'),    color: '#10b981' },
+  'qa':          { name: 'Diego',    role: 'QA Engineer',        avatar: avM('DiegoQA2026'),    color: '#f59e0b' },
+  'devops':      { name: 'Elena',    role: 'DevOps & Cloud',     avatar: avF('ElenaOps2026'),   color: '#ef4444' },
+  'os-core':     { name: 'OS Core',  role: 'Orquestrador',       avatar: avBot('OSCore2026'),   color: '#3b82f6' },
+  'strat':       { name: 'Mariana',  role: 'Estrategista',       avatar: avF('MarianaST2026'),  color: '#a855f7' },
+  'copy':        { name: 'João',     role: 'Copywriter',         avatar: avM('JoaoCopy2026'),   color: '#f97316' },
+  'seo':         { name: 'Fernanda', role: 'SEO Specialist',     avatar: avF('FernandaSEO2026'),color: '#14b8a6' },
+  'social':      { name: 'Ricardo',  role: 'Social Media',       avatar: avM('RicardoSM2026'),  color: '#e879f9' },
+  'sales':       { name: 'Mateus',   role: 'Sales',              avatar: avM('MateusSales2026'),color: '#0ea5e9' },
+  'biz':         { name: 'Julia',    role: 'Business Analyst',   avatar: avF('JuliaBiz2026'),   color: '#84cc16' },
+  'cfo':         { name: 'Roberto',  role: 'CFO / Financeiro',   avatar: avM('RobertoCFO2026'), color: '#64748b' },
+  'hr':          { name: 'Patrícia', role: 'People & Culture',   avatar: avF('PatriciaHR2026'), color: '#ec4899' },
+  'ceo-ia':      { name: 'Hélio',    role: 'CEO / Orquestrador', avatar: avBot('HelioCEO2026'), color: '#3b82f6' },
   // Aliases by agent first name (used by backend create_task assignee_name)
-  'luna':        { name: 'Luna',     role: 'Business Analyst',   avatar: av('LunaBiz',    '84cc16', true),  color: '#84cc16' },
-  'sarah':       { name: 'Sarah',    role: 'Product Manager',    avatar: av('SarahPM',    '6366f1', true),  color: '#6366f1' },
-  'alex':        { name: 'Alex',     role: 'UX Designer',        avatar: av('AlexUX',     '8b5cf6', false), color: '#8b5cf6' },
-  'bruno':       { name: 'Bruno',    role: 'Dev Frontend',       avatar: av('BrunoFE',    '06b6d4', false), color: '#06b6d4' },
-  'carla':       { name: 'Carla',    role: 'Dev Backend',        avatar: av('CarlaBE',    '10b981', true),  color: '#10b981' },
-  'diego':       { name: 'Diego',    role: 'QA Engineer',        avatar: av('DiegoQA',    'f59e0b', false), color: '#f59e0b' },
-  'elena':       { name: 'Elena',    role: 'DevOps & Cloud',     avatar: av('ElenaOps',   'ef4444', true),  color: '#ef4444' },
-  'bob':         { name: 'Bob',      role: 'Scrum Master',       avatar: av('BobScrum',   '0ea5e9', false), color: '#0ea5e9' },
-  'helio':       { name: 'Hélio',    role: 'CEO / Orquestrador', avatar: av('HelioCEO',   '3b82f6', false), color: '#3b82f6' },
-  'scrum':       { name: 'Bob',      role: 'Scrum Master',       avatar: av('BobScrum',   '0ea5e9', false), color: '#0ea5e9' },
-  'analyst':     { name: 'Luna',     role: 'Business Analyst',   avatar: av('LunaBiz',    '84cc16', true),  color: '#84cc16' },
+  'luna':        { name: 'Luna',     role: 'Business Analyst',   avatar: avF('LunaBiz2026'),    color: '#84cc16' },
+  'sarah':       { name: 'Sarah',    role: 'Product Manager',    avatar: avF('SarahPM2026'),    color: '#6366f1' },
+  'alex':        { name: 'Alex',     role: 'UX Designer',        avatar: avM('AlexUX2026'),     color: '#8b5cf6' },
+  'bruno':       { name: 'Bruno',    role: 'Dev Frontend',       avatar: avM('BrunoFE2026'),    color: '#06b6d4' },
+  'carla':       { name: 'Carla',    role: 'Dev Backend',        avatar: avF('CarlaBE2026'),    color: '#10b981' },
+  'diego':       { name: 'Diego',    role: 'QA Engineer',        avatar: avM('DiegoQA2026'),    color: '#f59e0b' },
+  'elena':       { name: 'Elena',    role: 'DevOps & Cloud',     avatar: avF('ElenaOps2026'),   color: '#ef4444' },
+  'bob':         { name: 'Bob',      role: 'Scrum Master',       avatar: avM('BobScrum2026'),   color: '#0ea5e9' },
+  'helio':       { name: 'Hélio',    role: 'CEO / Orquestrador', avatar: avBot('HelioCEO2026'), color: '#3b82f6' },
+  'scrum':       { name: 'Bob',      role: 'Scrum Master',       avatar: avM('BobScrum2026'),   color: '#0ea5e9' },
+  'analyst':     { name: 'Luna',     role: 'Business Analyst',   avatar: avF('LunaBiz2026'),    color: '#84cc16' },
   'recruiter':   { name: 'Gustavo',  role: 'Recrutamento',       avatar: av('GustavoREC', '475569', false), color: '#475569' },
   'fin-analyst': { name: 'Letícia',  role: 'Analista Financeiro',avatar: av('LeticiaFIN', '1e293b', true),  color: '#64748b' },
   'market':      { name: 'Sofia',    role: 'Marketing',          avatar: av('SofiaMKT',   '1e3a8a', true),  color: '#3b82f6' },
