@@ -61,9 +61,9 @@ const AGENT_AVATAR_MAP: Record<string, { name: string; role: string; avatar: str
   'helio':       { name: 'Hélio',    role: 'CEO / Orquestrador', avatar: avBot('HelioCEO2026'), color: '#3b82f6' },
   'scrum':       { name: 'Bob',      role: 'Scrum Master',       avatar: avM('BobScrum2026'),   color: '#0ea5e9' },
   'analyst':     { name: 'Luna',     role: 'Business Analyst',   avatar: avF('LunaBiz2026'),    color: '#84cc16' },
-  'recruiter':   { name: 'Gustavo',  role: 'Recrutamento',       avatar: av('GustavoREC', '475569', false), color: '#475569' },
-  'fin-analyst': { name: 'Letícia',  role: 'Analista Financeiro',avatar: av('LeticiaFIN', '1e293b', true),  color: '#64748b' },
-  'market':      { name: 'Sofia',    role: 'Marketing',          avatar: av('SofiaMKT',   '1e3a8a', true),  color: '#3b82f6' },
+  'recruiter':   { name: 'Gustavo',  role: 'Recrutamento',       avatar: avM('GustavoREC2026'),  color: '#475569' },
+  'fin-analyst': { name: 'Letícia',  role: 'Analista Financeiro',avatar: avF('LeticiaFIN2026'), color: '#64748b' },
+  'market':      { name: 'Sofia',    role: 'Marketing',          avatar: avF('SofiaMKT2026'),   color: '#3b82f6' },
 };
 
 const SPECIALISTS_NAMES: Record<string, string> = {
