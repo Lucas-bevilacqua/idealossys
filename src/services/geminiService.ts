@@ -45,52 +45,67 @@ async function consumeSSEStream(
   let buffer = '';
   let currentEvent = '';
   let lastText = '';
+  let doneSeen = false;
 
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split('\n');
-    buffer = lines.pop() || '';
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
 
-    for (const line of lines) {
-      if (line.startsWith('event: ')) {
-        currentEvent = line.slice(7).trim();
-      } else if (line === '') {
-        currentEvent = '';
-      } else if (line.startsWith('data: ')) {
-        try {
-          const data = JSON.parse(line.slice(6));
-          if (currentEvent === 'done') {
-            lastText = data.text || '';
-            onDone(lastText);
-            return;
-          } else if (currentEvent === 'error') {
-            onError(data.message || data.text || 'Erro desconhecido');
-            return;
-          } else if (currentEvent === 'job_id') {
-            // Save for reconnect — also forward as event
-            saveActiveJobId(data.jobId);
-            onEvent({ type: 'job_id', jobId: data.jobId });
-          } else {
-            const knownEvents = [
-              'orchestrator_plan', 'agent_start', 'agent_message',
-              'agent_done', 'agent_handoff', 'tool_call',
-              'task_created', 'task_updated',
-              'artifact_created', 'artifact_updated',
-              'project_created', 'infrastructure_provisioned',
-            ];
-            if (knownEvents.includes(currentEvent)) {
-              onEvent({ type: currentEvent as any, ...data });
+      for (const line of lines) {
+        if (line.startsWith('event: ')) {
+          currentEvent = line.slice(7).trim();
+        } else if (line === '') {
+          currentEvent = '';
+        } else if (line.startsWith('data: ')) {
+          try {
+            const data = JSON.parse(line.slice(6));
+            if (currentEvent === 'done') {
+              doneSeen = true;
+              lastText = data.text || '';
+              onDone(lastText);
+              return;
+            } else if (currentEvent === 'error') {
+              onError(data.message || data.text || 'Erro desconhecido');
+              return;
+            } else if (currentEvent === 'job_id') {
+              // Save for reconnect — also forward as event
+              saveActiveJobId(data.jobId);
+              onEvent({ type: 'job_id', jobId: data.jobId });
+            } else {
+              const knownEvents = [
+                'orchestrator_plan', 'agent_start', 'agent_message',
+                'agent_done', 'agent_handoff', 'tool_call',
+                'task_created', 'task_updated',
+                'artifact_created', 'artifact_updated',
+                'project_created', 'infrastructure_provisioned',
+              ];
+              if (knownEvents.includes(currentEvent)) {
+                onEvent({ type: currentEvent as any, ...data });
+              }
             }
-          }
-        } catch { /* ignore parse errors */ }
+          } catch { /* ignore parse errors */ }
+        }
       }
     }
+  } catch {
+    // reader.read() threw — network dropped mid-stream
+    if (!doneSeen) {
+      onError('network_lost');
+      return;
+    }
   }
-  // Stream closed without 'done' — treat as completion
-  onDone(lastText);
+
+  // Stream closed without 'done' — network drop or server restart
+  if (!doneSeen) {
+    onError('network_lost');
+  } else {
+    onDone(lastText);
+  }
 }
 
 export class GeminiService {
@@ -164,7 +179,32 @@ export class GeminiService {
               resolve({ text, agentId, functionCalls });
             }
           },
-          (msg) => {
+          async (msg) => {
+            // network_lost = mid-stream disconnect — job still running, attempt reconnect
+            if (msg === 'network_lost' && !resolved) {
+              clearTimeout(timeout);
+              const savedJobId = getActiveJobId();
+              if (savedJobId) {
+                for (let attempt = 1; attempt <= 3; attempt++) {
+                  await new Promise(r => setTimeout(r, attempt * 2000));
+                  try {
+                    const result = await new GeminiService().reconnectJob(savedJobId, wrappedOnEvent);
+                    if (!resolved) {
+                      resolved = true;
+                      clearActiveJobId();
+                      resolve({ text: result.text, agentId, functionCalls });
+                    }
+                    return;
+                  } catch { /* retry */ }
+                }
+              }
+              if (!resolved) {
+                resolved = true;
+                clearActiveJobId();
+                resolve({ text: `Conexão perdida. O agente pode ter continuado — recarregue para verificar.`, agentId, functionCalls });
+              }
+              return;
+            }
             if (!resolved) {
               resolved = true;
               clearTimeout(timeout);
@@ -180,13 +220,36 @@ export class GeminiService {
           clearActiveJobId();
           resolve({ text: 'Execução concluída.', agentId, functionCalls });
         }
-      }).catch(err => {
+      }).catch(async (err) => {
         clearTimeout(timeout);
         if (!resolved) {
+          if (err.name === 'AbortError') {
+            // User-triggered timeout — abort cleanly
+            resolved = true;
+            clearActiveJobId();
+            resolve({ text: 'Tempo limite atingido. Verifique os artefatos gerados.', agentId, functionCalls });
+            return;
+          }
+          // Network error — job still running on backend, attempt auto-reconnect
+          const savedJobId = getActiveJobId();
+          if (savedJobId && onEvent) {
+            for (let attempt = 1; attempt <= 3; attempt++) {
+              await new Promise(r => setTimeout(r, attempt * 2000));
+              try {
+                const result = await new GeminiService().reconnectJob(savedJobId, onEvent);
+                if (!resolved) {
+                  resolved = true;
+                  clearActiveJobId();
+                  resolve({ text: result.text, agentId, functionCalls });
+                }
+                return;
+              } catch { /* retry */ }
+            }
+          }
+          // All retries failed
           resolved = true;
-          // Don't clear job_id on abort — client may want to reconnect
-          if (err.name !== 'AbortError') clearActiveJobId();
-          resolve({ text: err.name === 'AbortError' ? 'Tempo limite atingido.' : `Erro de conexão: ${err.message}`, agentId, functionCalls });
+          clearActiveJobId();
+          resolve({ text: `Erro de conexão. O agente pode ter continuado em segundo plano — recarregue para verificar.`, agentId, functionCalls });
         }
       });
     });

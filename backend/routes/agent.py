@@ -305,6 +305,8 @@ async def _run_agent_job(job_id: str, tenant_id: str, full_prompt: str,
                 elif event_type == 'RunCompleted':
                     raw_id = getattr(chunk, 'agent_id', '') or getattr(chunk, 'agent_name', '') or ''
                     fe_id, display_name = AGENT_MAP.get(raw_id.lower(), (raw_id.lower() or 'os-core', raw_id or 'Agente'))
+                    # Allow re-start in correction loops (e.g. QA rejects → Bruno runs again)
+                    active_agents.discard(fe_id)
                     content = getattr(chunk, 'content', '') or ''.join(agent_text_parts.pop(raw_id, []))
                     if content:
                         _push(job, "agent_message", {"agentId": fe_id, "agentName": display_name, "message": content},
