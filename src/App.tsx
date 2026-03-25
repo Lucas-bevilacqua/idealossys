@@ -21,49 +21,46 @@ const IconMap: Record<string, any> = { Terminal, Megaphone, Briefcase, DollarSig
 
 // --- SUB-COMPONENTS ---
 
-// Mapear agentId → agente real para avatares no chat e no bloco de interação
-// lorelei = estilo feminino ilustrado realista | adventurer = estilo masculino ilustrado realista
-const avF = (seed: string) =>
-  `https://api.dicebear.com/9.x/lorelei/svg?seed=${seed}&radius=50&backgroundColor=transparent`;
-const avM = (seed: string) =>
-  `https://api.dicebear.com/9.x/adventurer/svg?seed=${seed}&radius=50&backgroundColor=transparent`;
+// Fotos reais de pessoas — randomuser.me tem URLs estáveis por número
+// Mulheres: /women/N.jpg | Homens: /men/N.jpg (0–99)
+const P = (gender: 'women' | 'men', n: number) =>
+  `https://randomuser.me/api/portraits/${gender}/${n}.jpg`;
 
-// Hélio usa bottts (robô/IA) para destacar que é o orquestrador
-const avBot = (seed: string) =>
-  `https://api.dicebear.com/9.x/bottts/svg?seed=${seed}&radius=50&backgroundColor=3b82f6`;
+// Hélio: robô/IA — destaca que é o orquestrador, não uma pessoa
+const HELIO_AVATAR = 'https://api.dicebear.com/9.x/bottts/svg?seed=HelioCEO2026&radius=50&backgroundColor=3b82f6';
 
 const AGENT_AVATAR_MAP: Record<string, { name: string; role: string; avatar: string; color: string }> = {
-  'pm':          { name: 'Sarah',    role: 'Product Manager',    avatar: avF('SarahPM2026'),    color: '#6366f1' },
-  'ux':          { name: 'Alex',     role: 'UX Designer',        avatar: avM('AlexUX2026'),     color: '#8b5cf6' },
-  'dev-fe':      { name: 'Bruno',    role: 'Dev Frontend',       avatar: avM('BrunoFE2026'),    color: '#06b6d4' },
-  'dev-be':      { name: 'Carla',    role: 'Dev Backend',        avatar: avF('CarlaBE2026'),    color: '#10b981' },
-  'qa':          { name: 'Diego',    role: 'QA Engineer',        avatar: avM('DiegoQA2026'),    color: '#f59e0b' },
-  'devops':      { name: 'Elena',    role: 'DevOps & Cloud',     avatar: avF('ElenaOps2026'),   color: '#ef4444' },
-  'os-core':     { name: 'OS Core',  role: 'Orquestrador',       avatar: avBot('OSCore2026'),   color: '#3b82f6' },
-  'strat':       { name: 'Mariana',  role: 'Estrategista',       avatar: avF('MarianaST2026'),  color: '#a855f7' },
-  'copy':        { name: 'João',     role: 'Copywriter',         avatar: avM('JoaoCopy2026'),   color: '#f97316' },
-  'seo':         { name: 'Fernanda', role: 'SEO Specialist',     avatar: avF('FernandaSEO2026'),color: '#14b8a6' },
-  'social':      { name: 'Ricardo',  role: 'Social Media',       avatar: avM('RicardoSM2026'),  color: '#e879f9' },
-  'sales':       { name: 'Mateus',   role: 'Sales',              avatar: avM('MateusSales2026'),color: '#0ea5e9' },
-  'biz':         { name: 'Julia',    role: 'Business Analyst',   avatar: avF('JuliaBiz2026'),   color: '#84cc16' },
-  'cfo':         { name: 'Roberto',  role: 'CFO / Financeiro',   avatar: avM('RobertoCFO2026'), color: '#64748b' },
-  'hr':          { name: 'Patrícia', role: 'People & Culture',   avatar: avF('PatriciaHR2026'), color: '#ec4899' },
-  'ceo-ia':      { name: 'Hélio',    role: 'CEO / Orquestrador', avatar: avBot('HelioCEO2026'), color: '#3b82f6' },
+  'pm':          { name: 'Sarah',    role: 'Product Manager',    avatar: P('women', 44), color: '#6366f1' },
+  'ux':          { name: 'Alex',     role: 'UX Designer',        avatar: P('men',   32), color: '#8b5cf6' },
+  'dev-fe':      { name: 'Bruno',    role: 'Dev Frontend',       avatar: P('men',   55), color: '#06b6d4' },
+  'dev-be':      { name: 'Carla',    role: 'Dev Backend',        avatar: P('women', 35), color: '#10b981' },
+  'qa':          { name: 'Diego',    role: 'QA Engineer',        avatar: P('men',   19), color: '#f59e0b' },
+  'devops':      { name: 'Elena',    role: 'DevOps & Cloud',     avatar: P('women', 28), color: '#ef4444' },
+  'os-core':     { name: 'OS Core',  role: 'Orquestrador',       avatar: HELIO_AVATAR,   color: '#3b82f6' },
+  'strat':       { name: 'Mariana',  role: 'Estrategista',       avatar: P('women', 62), color: '#a855f7' },
+  'copy':        { name: 'João',     role: 'Copywriter',         avatar: P('men',   41), color: '#f97316' },
+  'seo':         { name: 'Fernanda', role: 'SEO Specialist',     avatar: P('women', 17), color: '#14b8a6' },
+  'social':      { name: 'Ricardo',  role: 'Social Media',       avatar: P('men',   73), color: '#e879f9' },
+  'sales':       { name: 'Mateus',   role: 'Sales',              avatar: P('men',   88), color: '#0ea5e9' },
+  'biz':         { name: 'Julia',    role: 'Business Analyst',   avatar: P('women', 51), color: '#84cc16' },
+  'cfo':         { name: 'Roberto',  role: 'CFO / Financeiro',   avatar: P('men',   64), color: '#64748b' },
+  'hr':          { name: 'Patrícia', role: 'People & Culture',   avatar: P('women', 79), color: '#ec4899' },
+  'ceo-ia':      { name: 'Hélio',    role: 'CEO / Orquestrador', avatar: HELIO_AVATAR,   color: '#3b82f6' },
   // Aliases by agent first name (used by backend create_task assignee_name)
-  'luna':        { name: 'Luna',     role: 'Business Analyst',   avatar: avF('LunaBiz2026'),    color: '#84cc16' },
-  'sarah':       { name: 'Sarah',    role: 'Product Manager',    avatar: avF('SarahPM2026'),    color: '#6366f1' },
-  'alex':        { name: 'Alex',     role: 'UX Designer',        avatar: avM('AlexUX2026'),     color: '#8b5cf6' },
-  'bruno':       { name: 'Bruno',    role: 'Dev Frontend',       avatar: avM('BrunoFE2026'),    color: '#06b6d4' },
-  'carla':       { name: 'Carla',    role: 'Dev Backend',        avatar: avF('CarlaBE2026'),    color: '#10b981' },
-  'diego':       { name: 'Diego',    role: 'QA Engineer',        avatar: avM('DiegoQA2026'),    color: '#f59e0b' },
-  'elena':       { name: 'Elena',    role: 'DevOps & Cloud',     avatar: avF('ElenaOps2026'),   color: '#ef4444' },
-  'bob':         { name: 'Bob',      role: 'Scrum Master',       avatar: avM('BobScrum2026'),   color: '#0ea5e9' },
-  'helio':       { name: 'Hélio',    role: 'CEO / Orquestrador', avatar: avBot('HelioCEO2026'), color: '#3b82f6' },
-  'scrum':       { name: 'Bob',      role: 'Scrum Master',       avatar: avM('BobScrum2026'),   color: '#0ea5e9' },
-  'analyst':     { name: 'Luna',     role: 'Business Analyst',   avatar: avF('LunaBiz2026'),    color: '#84cc16' },
-  'recruiter':   { name: 'Gustavo',  role: 'Recrutamento',       avatar: avM('GustavoREC2026'),  color: '#475569' },
-  'fin-analyst': { name: 'Letícia',  role: 'Analista Financeiro',avatar: avF('LeticiaFIN2026'), color: '#64748b' },
-  'market':      { name: 'Sofia',    role: 'Marketing',          avatar: avF('SofiaMKT2026'),   color: '#3b82f6' },
+  'luna':        { name: 'Luna',     role: 'Business Analyst',   avatar: P('women', 90), color: '#84cc16' },
+  'sarah':       { name: 'Sarah',    role: 'Product Manager',    avatar: P('women', 44), color: '#6366f1' },
+  'alex':        { name: 'Alex',     role: 'UX Designer',        avatar: P('men',   32), color: '#8b5cf6' },
+  'bruno':       { name: 'Bruno',    role: 'Dev Frontend',       avatar: P('men',   55), color: '#06b6d4' },
+  'carla':       { name: 'Carla',    role: 'Dev Backend',        avatar: P('women', 35), color: '#10b981' },
+  'diego':       { name: 'Diego',    role: 'QA Engineer',        avatar: P('men',   19), color: '#f59e0b' },
+  'elena':       { name: 'Elena',    role: 'DevOps & Cloud',     avatar: P('women', 28), color: '#ef4444' },
+  'bob':         { name: 'Bob',      role: 'Scrum Master',       avatar: P('men',   41), color: '#0ea5e9' },
+  'helio':       { name: 'Hélio',    role: 'CEO / Orquestrador', avatar: HELIO_AVATAR,   color: '#3b82f6' },
+  'scrum':       { name: 'Bob',      role: 'Scrum Master',       avatar: P('men',   41), color: '#0ea5e9' },
+  'analyst':     { name: 'Luna',     role: 'Business Analyst',   avatar: P('women', 90), color: '#84cc16' },
+  'recruiter':   { name: 'Gustavo',  role: 'Recrutamento',       avatar: P('men',   22), color: '#475569' },
+  'fin-analyst': { name: 'Letícia',  role: 'Analista Financeiro',avatar: P('women', 58), color: '#64748b' },
+  'market':      { name: 'Sofia',    role: 'Marketing',          avatar: P('women', 33), color: '#3b82f6' },
 };
 
 const SPECIALISTS_NAMES: Record<string, string> = {
