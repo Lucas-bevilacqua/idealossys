@@ -1320,8 +1320,16 @@ RULES:
             if updated_js and js_artifact:
                 await db.update_artifact_code(artifact_id=js_artifact["id"], code=updated_js)
 
-        # UPDATE the existing HTML artifact in-place (same ID → frontend updates the open viewer)
+        # Snapshot da versão atual antes de sobrescrever
         artifact_id = latest["id"]
+        await db.save_artifact_version(
+            artifact_id=artifact_id,
+            tenant_id=tenant_id,
+            code=existing_code,
+            label=f"antes: {fix_instructions[:60]}",
+        )
+
+        # UPDATE the existing HTML artifact in-place (same ID → frontend updates the open viewer)
         await db.update_artifact_code(artifact_id=artifact_id, code=updated_html)
 
         if event_queue:

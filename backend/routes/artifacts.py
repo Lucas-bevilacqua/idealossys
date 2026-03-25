@@ -64,3 +64,46 @@ async def delete_artifact(
         raise HTTPException(status_code=404, detail="Artifact not found")
     await db.delete_artifact(artifact_id=artifact_id)
     return {"deleted": True}
+
+
+@router.get("/{artifact_id}/versions")
+async def get_artifact_versions(
+    artifact_id: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """List version history for an artifact"""
+    tenant_id = current_user["tenant_id"]
+    versions = await db.get_artifact_versions(artifact_id=artifact_id, tenant_id=tenant_id)
+    return versions
+
+
+@router.post("/{artifact_id}/revert/{version_id}")
+async def revert_artifact_to_version(
+    artifact_id: str,
+    version_id: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """Revert an artifact to a previous version (saves current as a version first)"""
+    tenant_id = current_user["tenant_id"]
+    artifacts = await db.get_artifacts(tenant_id)
+    existing = next((a for a in artifacts if a["id"] == artifact_id), None)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Artifact not found")
+
+    # Save current code as a version before reverting
+    current_code = existing.get("code", "")
+    if current_code:
+        await db.save_artifact_version(
+            artifact_id=artifact_id,
+            tenant_id=tenant_id,
+            code=current_code,
+            label="antes do revert",
+        )
+
+    # Get the version code to restore
+    restore_code = await db.get_artifact_version_code(version_id=version_id, tenant_id=tenant_id)
+    if restore_code is None:
+        raise HTTPException(status_code=404, detail="Version not found")
+
+    await db.update_artifact_code(artifact_id=artifact_id, code=restore_code)
+    return {"reverted": True, "artifact_id": artifact_id, "version_id": version_id}

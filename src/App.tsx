@@ -397,6 +397,8 @@ export default function App() {
   const [logoFile, setLogoFile] = useState<string | null>(null); // base64 data URL
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [artifactVersions, setArtifactVersions] = useState<{ id: string; created_at: number; label: string; code_length: number }[]>([]);
+  const [showVersionsPanel, setShowVersionsPanel] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const globalScrollRef = useRef<HTMLDivElement>(null);
@@ -1711,7 +1713,7 @@ export default function App() {
                   <p className="text-[9px] text-dim/40 mt-1">LPs, snippets e docs avulsos. Sistemas completos ficam em <button onClick={() => setCurrentView('projects')} className="text-accent/60 underline">Projetos</button>.</p>
                 </div>
                 {artifacts.filter(a => !(a as any).projectId).map(a => (
-                  <button key={a.id} onClick={() => { setCurrentArtifact(a); setArtifactViewMode(a.type === 'web' ? 'preview' : 'code'); }} className={`block w-full text-left px-4 py-3 rounded-xl text-xs transition-all border ${currentArtifact?.id === a.id ? 'bg-accent/10 border-accent/30 text-accent shadow-lg shadow-accent/5' : 'bg-white/[0.02] border-white/5 text-dim hover:bg-white/[0.05]'}`}>
+                  <button key={a.id} onClick={() => { setCurrentArtifact(a); setArtifactViewMode(a.type === 'web' ? 'preview' : 'code'); setShowVersionsPanel(false); }} className={`block w-full text-left px-4 py-3 rounded-xl text-xs transition-all border ${currentArtifact?.id === a.id ? 'bg-accent/10 border-accent/30 text-accent shadow-lg shadow-accent/5' : 'bg-white/[0.02] border-white/5 text-dim hover:bg-white/[0.05]'}`}>
                     <span className="font-bold block truncate uppercase tracking-tighter">{a.title}</span>
                     <span className="label-mono text-[8px] opacity-40 uppercase">{a.type}</span>
                   </button>
@@ -1723,11 +1725,46 @@ export default function App() {
                     <div className="flex items-center justify-between px-8 py-4 border-b border-white/5 bg-white/[0.01]">
                       <div className="flex items-center gap-4"><div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center"><FileCode size={20} className="text-accent" /></div><div><span className="text-sm font-black text-main uppercase tracking-widest">{currentArtifact.title}</span><p className="text-[10px] label-mono opacity-40 uppercase">Código Fonte</p></div></div>
                       <div className="flex gap-2">
+                        <button onClick={async () => {
+                          const v = await fetch(`/api/artifacts/${currentArtifact.id}/versions`).then(r => r.ok ? r.json() : []);
+                          setArtifactVersions(v);
+                          setShowVersionsPanel(p => !p);
+                        }} className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase tracking-widest border border-white/5 transition-all text-dim">
+                          <History size={14} /> Histórico
+                        </button>
                         {currentArtifact.type === 'web' && <button onClick={() => setIsFullscreenArtifact(true)} className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 hover:bg-white/10 text-[10px] font-black uppercase tracking-widest border border-white/5 transition-all text-main"><Eye size={14} /> Foco Total</button>}
                         <div className="p-1 bg-white/[0.03] rounded-full border border-white/5 flex gap-1">{(['code', 'preview'] as const).map(m => <button key={m} onClick={() => setArtifactViewMode(m)} className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase transition-all ${artifactViewMode === m ? 'bg-accent text-white shadow-lg shadow-accent/20' : 'text-dim'}`}>{m === 'code' ? 'Code' : 'Live'}</button>)}</div>
                       </div>
                     </div>
-                    <div className="flex-1 overflow-auto bg-[#020202]">{artifactViewMode === 'preview' && currentArtifact.type === 'web' ? <iframe srcDoc={currentArtifact.code} className="w-full h-full border-0 bg-white" sandbox="allow-scripts" /> : <pre className="p-8 text-xs font-mono text-accent leading-relaxed bg-[#050505] h-full overflow-auto"><code>{currentArtifact.code}</code></pre>}</div>
+                    <div className="flex-1 flex overflow-hidden bg-[#020202]">
+                      {showVersionsPanel && (
+                        <div className="w-64 border-r border-white/5 overflow-auto p-4 bg-[#050505] flex-shrink-0">
+                          <p className="text-[9px] font-black uppercase tracking-[0.3em] opacity-40 mb-3">Histórico de Versões</p>
+                          {artifactVersions.length === 0 ? (
+                            <p className="text-[10px] text-dim/40 italic">Nenhuma versão salva. Edite o artefato para criar versões automáticas.</p>
+                          ) : artifactVersions.map(v => (
+                            <div key={v.id} className="mb-2 p-3 rounded-xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                              <p className="text-[10px] font-bold text-main truncate">{v.label}</p>
+                              <p className="text-[9px] text-dim/40 label-mono">{new Date(v.created_at).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' })} · {Math.round(v.code_length / 1024)}kb</p>
+                              <button onClick={async () => {
+                                if (!confirm('Reverter para esta versão? A versão atual será salva no histórico.')) return;
+                                const res = await fetch(`/api/artifacts/${currentArtifact.id}/revert/${v.id}`, { method: 'POST' });
+                                if (res.ok) {
+                                  const updated = await fetch('/api/artifacts').then(r => r.json());
+                                  setArtifacts(updated);
+                                  const refreshed = updated.find((a: any) => a.id === currentArtifact.id);
+                                  if (refreshed) setCurrentArtifact(refreshed);
+                                  setShowVersionsPanel(false);
+                                }
+                              }} className="mt-2 w-full px-3 py-1.5 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent text-[9px] font-black uppercase tracking-widest transition-all">
+                                Reverter
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      <div className="flex-1 overflow-auto">{artifactViewMode === 'preview' && currentArtifact.type === 'web' ? <iframe srcDoc={currentArtifact.code} className="w-full h-full border-0 bg-white" sandbox="allow-scripts" /> : <pre className="p-8 text-xs font-mono text-accent leading-relaxed bg-[#050505] h-full overflow-auto"><code>{currentArtifact.code}</code></pre>}</div>
+                    </div>
                   </>
                 ) : <div className="flex-1 flex flex-col items-center justify-center opacity-10 uppercase tracking-[0.5em] font-black"><Search size={64} className="mb-6" />Selecione uma entrega</div>}
               </div>

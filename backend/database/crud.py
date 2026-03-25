@@ -660,6 +660,44 @@ class Database:
                      "value": r[4], "confidence": r[5], "updated_at": r[6]}
                     for r in result.fetchall()]
 
+    # ============ Artifact Versions (histórico de versões) ============
+
+    async def save_artifact_version(self, artifact_id: str, tenant_id: str,
+                                    code: str, label: str = "") -> dict:
+        """Salva snapshot do código atual antes de editar."""
+        import time
+        vid = str(__import__("uuid").uuid4())
+        now = int(time.time() * 1000)
+        async with engine.begin() as conn:
+            await conn.execute(text("""
+                INSERT INTO artifact_versions (id, artifact_id, tenant_id, code, created_at, label)
+                VALUES (:id, :aid, :tid, :code, :now, :label)
+            """), {"id": vid, "aid": artifact_id, "tid": tenant_id,
+                   "code": code, "now": now, "label": label or f"v{now}"})
+        return {"id": vid, "artifact_id": artifact_id, "created_at": now, "label": label}
+
+    async def get_artifact_versions(self, artifact_id: str, tenant_id: str,
+                                    limit: int = 20) -> list:
+        """Lista versões anteriores de um artefato (mais recentes primeiro)."""
+        async with engine.connect() as conn:
+            result = await conn.execute(text("""
+                SELECT id, artifact_id, created_at, label, LENGTH(code) as code_len
+                FROM artifact_versions
+                WHERE artifact_id = :aid AND tenant_id = :tid
+                ORDER BY created_at DESC LIMIT :limit
+            """), {"aid": artifact_id, "tid": tenant_id, "limit": limit})
+            return [{"id": r[0], "artifact_id": r[1], "created_at": r[2],
+                     "label": r[3], "code_length": r[4]} for r in result.fetchall()]
+
+    async def get_artifact_version_code(self, version_id: str, tenant_id: str) -> str | None:
+        """Retorna o código de uma versão específica."""
+        async with engine.connect() as conn:
+            result = await conn.execute(text("""
+                SELECT code FROM artifact_versions WHERE id = :id AND tenant_id = :tid
+            """), {"id": version_id, "tid": tenant_id})
+            row = result.fetchone()
+            return row[0] if row else None
+
     # ============ Project Infra (registro no banco principal) ============
 
     async def upsert_project_infra(self, project_id: str, tenant_id: str, db_path: str,

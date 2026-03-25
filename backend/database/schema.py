@@ -291,12 +291,24 @@ async def init_db() -> None:
             )
         """))
 
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS artifact_versions (
+                id TEXT PRIMARY KEY,
+                artifact_id TEXT NOT NULL,
+                tenant_id TEXT NOT NULL,
+                code TEXT NOT NULL,
+                created_at INTEGER,
+                label TEXT
+            )
+        """))
+
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_inter_bu_tasks_tenant ON inter_bu_tasks(tenant_id)"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_inter_bu_tasks_status ON inter_bu_tasks(tenant_id, status)"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_bu_memory_tenant ON bu_memory(tenant_id, category)"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_sales_pipeline_tenant ON sales_pipeline(tenant_id, stage)"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_email_sequences_tenant ON email_sequences(tenant_id)"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_whatsapp_tenant ON whatsapp_conversations(tenant_id)"))
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_artifact_versions ON artifact_versions(artifact_id, created_at)"))
 
     # Seed: cria admin padrão se não existir
     await _seed_admin()
