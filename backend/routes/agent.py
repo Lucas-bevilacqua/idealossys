@@ -19,6 +19,8 @@ from fastapi import APIRouter, HTTPException, Request, Depends
 logger = logging.getLogger(__name__)
 from fastapi.responses import StreamingResponse
 from ..agents.orchestrator import get_os_core_team
+from ..agents.marketing_orchestrator import get_marketing_team
+from ..agents.vendas_orchestrator import get_vendas_team
 from ..auth.routes import get_current_user
 from ..database.crud import Database
 
@@ -135,6 +137,7 @@ def _has_pending_briefing(history: list) -> bool:
 
 # Map Agno agent name/id → (frontend agentId, display name)
 AGENT_MAP: dict[str, tuple[str, str]] = {
+    # BU Tech
     "luna":    ("analyst", "Luna"),
     "sarah":   ("pm",     "Sarah"),
     "alex":    ("ux",     "Alex"),
@@ -146,7 +149,68 @@ AGENT_MAP: dict[str, tuple[str, str]] = {
     "hélio":   ("ceo-ia", "Hélio"),
     "helio":   ("ceo-ia", "Hélio"),
     "os-core": ("ceo-ia", "Hélio"),
+    # BU Marketing
+    "mariana": ("strat",  "Mariana"),
+    "joão":    ("copy",   "João"),
+    "joao":    ("copy",   "João"),
+    "fernanda":("seo",    "Fernanda"),
+    "ricardo": ("social", "Ricardo"),
+    "camila":  ("mkt-head","Camila"),
+    "bu-marketing": ("mkt-head", "Camila"),
+    # BU Vendas
+    "isabela": ("leads",   "Isabela"),
+    "victor":  ("email",   "Victor"),
+    "leo":     ("whatsapp","Leo"),
+    "rafael":  ("sales-head","Rafael"),
+    "bu-vendas": ("sales-head", "Rafael"),
 }
+
+# Map area_name keywords → BU
+_BU_AREA_MAP = {
+    "marketing": "marketing",
+    "vendas":    "vendas",
+    "sales":     "vendas",
+}
+
+
+_ROUTE_KEYWORDS: dict[str, list[str]] = {
+    "marketing": [
+        "campanha", "post", "conteúdo", "conteudo", "copy", "texto", "legenda",
+        "instagram", "facebook", "anúncio", "anuncio", "tráfego", "trafego",
+        "calendário", "calendario", "editorial", "criar post", "escrever", "ads",
+        "google ads", "meta ads", "mídia paga", "midia paga", "criativos",
+    ],
+    "vendas": [
+        "lead", "leads", "prospectar", "prospecção", "prospeccao", "vender",
+        "vendas", "cliente", "cold email", "email marketing", "whatsapp",
+        "pipeline", "funil", "sequência de email", "sequencia", "follow-up",
+        "followup", "atendimento", "script", "zap",
+    ],
+}
+
+
+def _classify_bu(user_input: str) -> str | None:
+    """Classify user input to a BU based on keywords. Returns BU name or None."""
+    text = user_input.lower()
+    scores: dict[str, int] = {}
+    for bu, keywords in _ROUTE_KEYWORDS.items():
+        scores[bu] = sum(1 for kw in keywords if kw in text)
+    best = max(scores, key=lambda k: scores[k])
+    return best if scores[best] > 0 else None
+
+
+def _get_team(area_name: str, tenant_id: str, event_queue, user_input: str = ""):
+    """Return the appropriate agent team for a given area (with NL routing fallback)."""
+    # Explicit area mapping first
+    bu = _BU_AREA_MAP.get((area_name or "").lower())
+    # If area is "Global Operations" or unknown, try keyword classification
+    if not bu and area_name in ("Global Operations", "global", "", None):
+        bu = _classify_bu(user_input)
+    if bu == "marketing":
+        return get_marketing_team(tenant_id=tenant_id, event_queue=event_queue)
+    if bu == "vendas":
+        return get_vendas_team(tenant_id=tenant_id, event_queue=event_queue)
+    return get_os_core_team(tenant_id=tenant_id, event_queue=event_queue)
 
 
 async def _gemini_briefing(company_ctx: str, user_input: str) -> str:
@@ -233,7 +297,8 @@ async def _run_agent_job(job_id: str, tenant_id: str, full_prompt: str,
             await raw_q.put(item)
 
     bridge = _BridgeQueue()
-    team = get_os_core_team(tenant_id=tenant_id, event_queue=bridge)
+    team = _get_team(area_name=area_name, tenant_id=tenant_id,
+                     event_queue=bridge, user_input=user_input)
 
     try:
         helio_text_parts = []

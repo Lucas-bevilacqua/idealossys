@@ -1492,6 +1492,437 @@ RULES:
             print(f"[TOOL] provision_project_database error: {e}")
             return f"❌ Erro ao provisionar banco: {e}"
 
+    # ── BU Vendas tools ──────────────────────────────────────────────────────
+
+    async def manage_sales_lead(
+        action: str,
+        name: str = "",
+        email: str = "",
+        phone: str = "",
+        company: str = "",
+        role: str = "",
+        linkedin_url: str = "",
+        source: str = "prospectado",
+        fit_score: int = 0,
+        notes: str = "",
+        lead_id: str = "",
+        stage: str = "",
+    ) -> str:
+        """
+        Manage sales pipeline leads.
+
+        action: 'create' | 'update_stage' | 'list' | 'list_by_stage'
+        For 'create': provide name, email (optional), company, role, fit_score (1-5), notes
+        For 'update_stage': provide lead_id + stage
+          Valid stages: prospectado | contactado | respondeu | call_agendado | proposta | fechado | perdido
+        For 'list': returns all leads
+        For 'list_by_stage': returns leads in specific stage
+        """
+        if action == "create":
+            lead = await db.create_sales_lead(
+                tenant_id=tenant_id, name=name, email=email, phone=phone,
+                company=company, role=role, linkedin_url=linkedin_url,
+                source=source, fit_score=fit_score, notes=notes,
+            )
+            if event_queue:
+                await event_queue.put({
+                    "event": "task_created",
+                    "data": {"task": {"id": lead["id"], "title": f"Lead: {name} ({company})",
+                                      "status": "BACKLOG", "assigneeId": "victor"}},
+                })
+            return f"✅ Lead criado: {name} ({company}) | Fit: {fit_score}/5 | ID: {lead['id']}"
+
+        elif action == "update_stage":
+            if not lead_id or not stage:
+                return "❌ lead_id e stage são obrigatórios para update_stage"
+            valid = {"prospectado", "contactado", "respondeu", "call_agendado",
+                     "proposta", "fechado", "perdido"}
+            if stage not in valid:
+                return f"❌ Stage inválido. Use: {', '.join(sorted(valid))}"
+            await db.update_sales_lead_stage(lead_id=lead_id, tenant_id=tenant_id,
+                                             stage=stage, notes=notes)
+            return f"✅ Lead {lead_id} movido para: {stage}"
+
+        elif action in ("list", "list_by_stage"):
+            filter_stage = stage if action == "list_by_stage" else None
+            leads = await db.get_sales_pipeline(tenant_id=tenant_id, stage=filter_stage)
+            if not leads:
+                return "Nenhum lead no pipeline ainda."
+            # Group by stage
+            from collections import defaultdict
+            by_stage: dict = defaultdict(list)
+            for l in leads:
+                by_stage[l["stage"]].append(l)
+            lines = [f"=== PIPELINE DE VENDAS ({len(leads)} leads) ==="]
+            stage_order = ["prospectado", "contactado", "respondeu", "call_agendado",
+                           "proposta", "fechado", "perdido"]
+            for s in stage_order:
+                if s in by_stage:
+                    lines.append(f"\n[{s.upper()}] ({len(by_stage[s])} leads)")
+                    for l in by_stage[s][:5]:  # max 5 per stage to avoid overflow
+                        lines.append(f"  • {l['name']} — {l['company']} ({l['email'] or 'sem email'})")
+            return "\n".join(lines)
+
+        return f"❌ Action inválida: '{action}'. Use: create, update_stage, list, list_by_stage"
+
+    async def generate_email_sequence(
+        target_segment: str,
+        product_name: str = "",
+        main_pain: str = "",
+        cta: str = "Agendar uma conversa rápida",
+        sequence_name: str = "",
+    ) -> str:
+        """
+        Generate a cold email sequence (3 emails) tailored to the company and segment.
+
+        target_segment: who to send to (e.g. 'donos de ecommerce em SP com 10-50 funcionários')
+        product_name: which product/service to promote (uses company context if empty)
+        main_pain: the main pain point of the segment (auto-detected if empty)
+        cta: desired call-to-action (default: schedule a quick call)
+        sequence_name: name for this sequence
+        """
+        tenant = await db.get_tenant(tenant_id)
+        company_name = tenant.get("name", "nossa empresa") if tenant else "nossa empresa"
+        product = product_name or (tenant.get("description", "")[:200] if tenant else "")
+        tone = tenant.get("brand_tone", "profissional e direto") if tenant else "profissional e direto"
+
+        prompt = f"""Você é Victor, especialista em cold email B2B com +10 anos de experiência.
+
+Crie uma sequência de 3 cold emails para:
+Empresa: {company_name}
+Produto/Serviço: {product}
+Segmento-alvo: {target_segment}
+Dor principal: {main_pain or 'identifique a dor mais provável para este segmento'}
+CTA desejado: {cta}
+Tom da marca: {tone}
+
+REGRAS OBRIGATÓRIAS:
+- Email 1 (Dia 1 — Abertura): máx 120 palavras, foco em conexão + curiosidade, 1 pergunta aberta
+- Email 2 (Dia 3 — Follow-up): máx 100 palavras, ângulo DIFERENTE do email 1, adiciona prova social
+- Email 3 (Dia 7 — Breakup): máx 80 palavras, "última tentativa", tom leve e direto
+- NUNCA pareça spam: sem maiúsculas excessivas, sem múltiplos CTAs, sem "urgente" ou "oferta limitada"
+- Use variáveis: {{{{nome}}}}, {{{{empresa}}}}, {{{{segmento}}}}, {{{{dor_especifica}}}}
+- Cada email tem: Assunto (< 50 chars) + Corpo + CTA claro
+
+Retorne em Markdown com seções claras para cada email."""
+
+        print(f"[TOOL] generate_email_sequence: segment={target_segment!r}")
+        sequence_text = await _gemini_generate(prompt, timeout=120.0)
+
+        import json as _j
+        seq_name = sequence_name or f"Sequência — {target_segment[:40]}"
+        seq = await db.create_email_sequence(
+            tenant_id=tenant_id,
+            name=seq_name,
+            target_segment=target_segment,
+            emails_json=_j.dumps({"raw": sequence_text, "cta": cta}),
+        )
+        return (
+            f"✅ Sequência de cold email criada!\n"
+            f"Nome: {seq_name}\n"
+            f"ID: {seq['id']}\n\n"
+            f"{sequence_text}"
+        )
+
+    async def search_leads(
+        segment: str,
+        location: str = "Brasil",
+        company_size: str = "10-200",
+        limit: int = 10,
+    ) -> str:
+        """
+        Search for leads matching the target profile.
+        Uses Hunter.io API if HUNTER_API_KEY is set, otherwise generates realistic examples.
+
+        segment: target company segment (e.g. 'e-commerce de moda', 'clínicas odontológicas')
+        location: city/state/country (default: Brasil)
+        company_size: employee range (e.g. '10-50', '50-200')
+        limit: number of leads to return (max 20)
+        """
+        hunter_key = os.getenv("HUNTER_API_KEY", "")
+        limit = min(limit, 20)
+
+        if hunter_key:
+            try:
+                import httpx
+                async with httpx.AsyncClient(timeout=15) as client:
+                    r = await client.get(
+                        "https://api.hunter.io/v2/domain-search",
+                        params={"company": segment, "limit": limit, "api_key": hunter_key},
+                    )
+                    data = r.json()
+                    emails = data.get("data", {}).get("emails", [])
+                    if emails:
+                        leads = []
+                        for e in emails[:limit]:
+                            leads.append(
+                                f"• {e.get('first_name','')} {e.get('last_name','')} "
+                                f"— {e.get('position','N/A')} | {e.get('value','')}"
+                            )
+                        result = f"✅ {len(leads)} leads encontrados via Hunter.io:\n" + "\n".join(leads)
+                        # Save to pipeline
+                        for e in emails[:limit]:
+                            name = f"{e.get('first_name','')} {e.get('last_name','')}".strip() or "N/A"
+                            await db.create_sales_lead(
+                                tenant_id=tenant_id, name=name,
+                                email=e.get("value", ""),
+                                role=e.get("position", ""),
+                                company=data.get("data", {}).get("organization", ""),
+                                source="hunter.io", fit_score=3,
+                            )
+                        return result
+            except Exception as e:
+                print(f"[TOOL] search_leads Hunter error: {e}")
+
+        # Fallback: generate realistic lead examples with Gemini
+        tenant = await db.get_tenant(tenant_id)
+        product = (tenant.get("description", "")[:200] if tenant else "") or "produto/serviço"
+        prompt = f"""Gere {limit} leads REALISTAS (nomes brasileiros reais, empresas plausíveis) para prospecção:
+
+Segmento: {segment}
+Localização: {location}
+Tamanho da empresa: {company_size} funcionários
+Produto a oferecer: {product}
+
+Para cada lead, forneça:
+- Nome completo (nome brasileiro real)
+- Cargo (relevante para o produto)
+- Empresa (nome de empresa plausível do segmento)
+- Email (formato: nome@empresa.com.br)
+- LinkedIn (formato: linkedin.com/in/nome-sobrenome)
+- Score de fit (1-5, baseado no alinhamento com o produto)
+- Dor provável (1 linha)
+
+Formato: tabela Markdown com colunas: Nome | Cargo | Empresa | Email | Fit | Dor"""
+
+        print(f"[TOOL] search_leads: generating {limit} leads for {segment!r}")
+        leads_text = await _gemini_generate(prompt, timeout=90.0)
+        return f"✅ {limit} leads gerados para '{segment}' em {location}:\n\n{leads_text}"
+
+    async def send_whatsapp_message(
+        phone: str,
+        message: str,
+        contact_name: str = "",
+    ) -> str:
+        """
+        Send a WhatsApp message via Evolution API or Z-API.
+        Requires EVOLUTION_API_URL and EVOLUTION_API_KEY env vars to be configured.
+
+        phone: recipient phone (e.g. '5511999999999')
+        message: message text
+        contact_name: contact name for logging
+        """
+        evolution_url = os.getenv("EVOLUTION_API_URL", "")
+        evolution_key = os.getenv("EVOLUTION_API_KEY", "")
+        evolution_instance = os.getenv("EVOLUTION_INSTANCE", "")
+        zapi_instance = os.getenv("ZAPI_INSTANCE_ID", "")
+        zapi_token = os.getenv("ZAPI_TOKEN", "")
+
+        if not phone or not message:
+            return "❌ phone e message são obrigatórios"
+
+        # Clean phone number
+        clean_phone = "".join(c for c in phone if c.isdigit())
+        if not clean_phone.startswith("55"):
+            clean_phone = "55" + clean_phone
+
+        # Try Evolution API first
+        if evolution_url and evolution_key and evolution_instance:
+            try:
+                import httpx
+                async with httpx.AsyncClient(timeout=15) as client:
+                    r = await client.post(
+                        f"{evolution_url.rstrip('/')}/message/sendText/{evolution_instance}",
+                        json={"number": clean_phone, "text": message},
+                        headers={"apikey": evolution_key},
+                    )
+                    if r.status_code in (200, 201):
+                        import json as _j
+                        await db.upsert_whatsapp_conversation(
+                            tenant_id=tenant_id, contact_phone=clean_phone,
+                            contact_name=contact_name or clean_phone,
+                            last_message=message[:100],
+                            messages_json=_j.dumps([{"role": "out", "text": message,
+                                                     "ts": int(__import__("time").time())}]),
+                        )
+                        return f"✅ Mensagem enviada para {clean_phone} via Evolution API"
+            except Exception as e:
+                print(f"[TOOL] Evolution API error: {e}")
+
+        # Try Z-API fallback
+        if zapi_instance and zapi_token:
+            try:
+                import httpx
+                async with httpx.AsyncClient(timeout=15) as client:
+                    r = await client.post(
+                        f"https://api.z-api.io/instances/{zapi_instance}/token/{zapi_token}/send-text",
+                        json={"phone": clean_phone, "message": message},
+                    )
+                    if r.status_code in (200, 201):
+                        return f"✅ Mensagem enviada para {clean_phone} via Z-API"
+            except Exception as e:
+                print(f"[TOOL] Z-API error: {e}")
+
+        # No API configured — log and return instructions
+        return (
+            f"⚠️ WhatsApp não configurado.\n"
+            f"Para ativar: configure EVOLUTION_API_URL + EVOLUTION_API_KEY + EVOLUTION_INSTANCE no .env\n"
+            f"Alternativa: configure ZAPI_INSTANCE_ID + ZAPI_TOKEN no .env\n"
+            f"Mensagem que seria enviada para {clean_phone}:\n{message}"
+        )
+
+    # ── Cross-BU tools ────────────────────────────────────────────────────────
+
+    async def get_company_context() -> str:
+        """
+        Returns the full structured context of the company for this tenant.
+        Call at the start of any content generation to ensure brand consistency.
+        Returns: company info, brand identity, products, FAQ, social, sales hints.
+        """
+        tenant = await db.get_tenant(tenant_id)
+        if not tenant:
+            return "Contexto da empresa não configurado. Peça ao empresário para preencher o perfil."
+
+        memories = await db.get_memories(tenant_id=tenant_id)
+        mem_str = "\n".join(f"  • {m['key']}: {m['value']}" for m in memories) if memories else "  (nenhuma)"
+
+        ctx = [
+            "=== CONTEXTO DA EMPRESA ===",
+            f"Nome: {tenant.get('name', 'N/A')}",
+            f"Setor: {tenant.get('industry', 'N/A')}",
+            f"Descrição: {(tenant.get('description') or '')[:400]}",
+            f"Objetivos: {tenant.get('goals', 'N/A')}",
+            f"Público-alvo: {tenant.get('target_audience', 'N/A')}",
+            f"Desafios: {tenant.get('challenges', 'N/A')}",
+            "",
+            "=== IDENTIDADE DE MARCA ===",
+            f"Tom de voz: {tenant.get('brand_tone', 'profissional e inovador')}",
+            f"Cores da marca: {tenant.get('brand_colors', 'a definir')}",
+            f"Logo URL: {tenant.get('logo_url', 'não disponível')}",
+            f"Site: {tenant.get('website_url', 'não disponível')}",
+            "",
+            "=== MEMÓRIAS SALVAS ===",
+            mem_str,
+        ]
+        return "\n".join(ctx)
+
+    async def create_inter_bu_task(
+        to_bu: str,
+        task_type: str,
+        briefing: str,
+    ) -> str:
+        """
+        Create a task for another Business Unit to execute.
+        Use this when your BU needs work done by a specialized team.
+
+        to_bu: target BU — 'tech', 'marketing', 'vendas', 'financeiro', 'pessoas', 'estrategia'
+        task_type: type of work — 'create_lp', 'create_proposal', 'create_copy',
+                   'create_email_sequence', 'create_report', 'create_system'
+        briefing: detailed description of what needs to be done (include all relevant context)
+
+        Returns: task_id for tracking
+        """
+        valid_bus = {'tech', 'marketing', 'vendas', 'financeiro', 'pessoas', 'estrategia'}
+        if to_bu not in valid_bus:
+            return f"❌ BU inválida: '{to_bu}'. Use uma de: {', '.join(sorted(valid_bus))}"
+
+        # Detect current BU from context (caller's role)
+        from_bu = "unknown"
+
+        import json as _j
+        briefing_full = _j.dumps({
+            "task_type": task_type,
+            "briefing": briefing,
+            "requested_by": from_bu,
+        }, ensure_ascii=False)
+
+        task = await db.create_inter_bu_task(
+            tenant_id=tenant_id,
+            from_bu=from_bu,
+            to_bu=to_bu,
+            task_type=task_type,
+            briefing=briefing_full,
+        )
+        print(f"[TOOL] create_inter_bu_task: {from_bu} → {to_bu} ({task_type}), id={task['id']}")
+        return (
+            f"✅ Task criada para BU {to_bu}!\n"
+            f"Task ID: {task['id']}\n"
+            f"Tipo: {task_type}\n"
+            f"Status: pending\n"
+            f"Use get_inter_bu_task_result('{task['id']}') para verificar quando estiver pronto."
+        )
+
+    async def get_inter_bu_task_result(task_id: str) -> str:
+        """
+        Check the status and result of an inter-BU task.
+        task_id: the ID returned by create_inter_bu_task.
+        Returns current status and result if completed.
+        """
+        task = await db.get_inter_bu_task(task_id=task_id, tenant_id=tenant_id)
+        if not task:
+            return f"❌ Task '{task_id}' não encontrada."
+
+        status = task.get("status", "unknown")
+        if status == "done":
+            import json as _j
+            result_raw = task.get("result", "{}")
+            try:
+                result = _j.loads(result_raw)
+            except Exception:
+                result = {"raw": result_raw}
+            return (
+                f"✅ Task concluída!\n"
+                f"Task ID: {task_id}\n"
+                f"De: {task.get('from_bu')} → Para: {task.get('to_bu')}\n"
+                f"Resultado: {result}"
+            )
+        elif status == "failed":
+            return f"❌ Task {task_id} falhou. Crie uma nova task com briefing mais detalhado."
+        elif status == "running":
+            return f"⏳ Task {task_id} está sendo executada. Aguarde e tente novamente em alguns minutos."
+        else:
+            return f"⏳ Task {task_id} está aguardando execução (status: {status})."
+
+    async def save_bu_memory(category: str, key_name: str, value: str,
+                             confidence: float = 1.0) -> str:
+        """
+        Save a shared BU memory — accessible by all BUs in the OS.
+        Use for cross-BU learnings, brand decisions, customer insights.
+
+        category: 'brand', 'decision', 'customer', 'product', 'strategy'
+        key_name: short descriptive identifier (e.g. 'preferred_tone', 'top_objection')
+        value: the information to save
+        confidence: how confident you are (0.0-1.0)
+        """
+        result = await db.save_bu_memory(
+            tenant_id=tenant_id,
+            category=category,
+            key_name=key_name,
+            value=value,
+            confidence=confidence,
+        )
+        action = "atualizado" if result.get("updated") else "salvo"
+        return f"✅ Memória {action} — [{category}] {key_name}: {value}"
+
+    async def get_bu_memories(category: str = "") -> str:
+        """
+        Retrieve shared BU memories — learnings from all BUs in the OS.
+        category: filter by category ('brand', 'decision', 'customer', 'product', 'strategy')
+                  Leave empty to get all memories.
+        """
+        memories = await db.get_bu_memories(
+            tenant_id=tenant_id,
+            category=category or None,
+            limit=30,
+        )
+        if not memories:
+            return f"Nenhuma memória BU encontrada{' na categoria ' + category if category else ''}."
+
+        lines = [f"=== MEMÓRIAS BU ({len(memories)} entradas) ==="]
+        for m in memories:
+            lines.append(f"[{m['category']}] {m['key_name']}: {m['value']}")
+        return "\n".join(lines)
+
     return [
         create_task,
         update_task_status,
@@ -1505,4 +1936,14 @@ RULES:
         edit_landing_page,
         fetch_stock_images,
         provision_project_database,
+        get_company_context,
+        create_inter_bu_task,
+        get_inter_bu_task_result,
+        save_bu_memory,
+        get_bu_memories,
+        # BU Vendas
+        manage_sales_lead,
+        generate_email_sequence,
+        search_leads,
+        send_whatsapp_message,
     ]

@@ -415,6 +415,251 @@ class Database:
                 for r in result.fetchall()
             ]
 
+    # ============ Sales Pipeline ============
+
+    async def create_sales_lead(self, tenant_id: str, name: str, email: str = "",
+                                phone: str = "", company: str = "", role: str = "",
+                                linkedin_url: str = "", source: str = "manual",
+                                fit_score: int = 0, notes: str = "") -> Dict[str, Any]:
+        lead_id = str(uuid4())
+        now = int(time.time() * 1000)
+        async with engine.begin() as conn:
+            await conn.execute(text("""
+                INSERT INTO sales_pipeline
+                    (id, tenant_id, name, email, phone, company, role, linkedin_url,
+                     source, fit_score, stage, notes, created_at, updated_at)
+                VALUES (:id, :tid, :name, :email, :phone, :company, :role, :linkedin,
+                        :source, :fit, 'prospectado', :notes, :now, :now)
+            """), {"id": lead_id, "tid": tenant_id, "name": name, "email": email,
+                   "phone": phone, "company": company, "role": role,
+                   "linkedin": linkedin_url, "source": source, "fit": fit_score,
+                   "notes": notes, "now": now})
+        return {"id": lead_id, "name": name, "email": email, "company": company,
+                "stage": "prospectado", "fit_score": fit_score}
+
+    async def update_sales_lead_stage(self, lead_id: str, tenant_id: str,
+                                      stage: str, notes: str = "") -> bool:
+        now = int(time.time() * 1000)
+        async with engine.begin() as conn:
+            await conn.execute(text("""
+                UPDATE sales_pipeline
+                SET stage = :stage, last_contact = :now, updated_at = :now,
+                    notes = CASE WHEN :notes != '' THEN :notes ELSE notes END
+                WHERE id = :id AND tenant_id = :tid
+            """), {"stage": stage, "now": now, "notes": notes, "id": lead_id, "tid": tenant_id})
+        return True
+
+    async def get_sales_pipeline(self, tenant_id: str,
+                                 stage: Optional[str] = None) -> List[Dict[str, Any]]:
+        async with engine.connect() as conn:
+            if stage:
+                result = await conn.execute(text("""
+                    SELECT id, name, email, phone, company, role, linkedin_url,
+                           source, fit_score, stage, notes, last_contact, next_action,
+                           created_at, updated_at
+                    FROM sales_pipeline WHERE tenant_id = :tid AND stage = :stage
+                    ORDER BY updated_at DESC
+                """), {"tid": tenant_id, "stage": stage})
+            else:
+                result = await conn.execute(text("""
+                    SELECT id, name, email, phone, company, role, linkedin_url,
+                           source, fit_score, stage, notes, last_contact, next_action,
+                           created_at, updated_at
+                    FROM sales_pipeline WHERE tenant_id = :tid
+                    ORDER BY updated_at DESC
+                """), {"tid": tenant_id})
+            return [
+                {"id": r[0], "name": r[1], "email": r[2], "phone": r[3], "company": r[4],
+                 "role": r[5], "linkedinUrl": r[6], "source": r[7], "fitScore": r[8],
+                 "stage": r[9], "notes": r[10], "lastContact": r[11], "nextAction": r[12],
+                 "createdAt": r[13], "updatedAt": r[14]}
+                for r in result.fetchall()
+            ]
+
+    # ============ Email Sequences ============
+
+    async def create_email_sequence(self, tenant_id: str, name: str,
+                                    target_segment: str, emails_json: str) -> Dict[str, Any]:
+        seq_id = str(uuid4())
+        now = int(time.time() * 1000)
+        async with engine.begin() as conn:
+            await conn.execute(text("""
+                INSERT INTO email_sequences
+                    (id, tenant_id, name, target_segment, status, emails_json, stats_json, created_at, updated_at)
+                VALUES (:id, :tid, :name, :seg, 'draft', :emails, '{}', :now, :now)
+            """), {"id": seq_id, "tid": tenant_id, "name": name,
+                   "seg": target_segment, "emails": emails_json, "now": now})
+        return {"id": seq_id, "name": name, "status": "draft"}
+
+    async def get_email_sequences(self, tenant_id: str) -> List[Dict[str, Any]]:
+        async with engine.connect() as conn:
+            result = await conn.execute(text("""
+                SELECT id, name, target_segment, status, emails_json, stats_json, created_at
+                FROM email_sequences WHERE tenant_id = :tid ORDER BY created_at DESC
+            """), {"tid": tenant_id})
+            return [
+                {"id": r[0], "name": r[1], "targetSegment": r[2], "status": r[3],
+                 "emails": r[4], "stats": r[5], "createdAt": r[6]}
+                for r in result.fetchall()
+            ]
+
+    # ============ WhatsApp Conversations ============
+
+    async def upsert_whatsapp_conversation(self, tenant_id: str, contact_phone: str,
+                                           contact_name: str, last_message: str,
+                                           messages_json: str,
+                                           status: str = "auto") -> Dict[str, Any]:
+        now = int(time.time() * 1000)
+        async with engine.begin() as conn:
+            existing = await conn.execute(text("""
+                SELECT id FROM whatsapp_conversations
+                WHERE tenant_id = :tid AND contact_phone = :phone
+            """), {"tid": tenant_id, "phone": contact_phone})
+            row = existing.fetchone()
+            if row:
+                await conn.execute(text("""
+                    UPDATE whatsapp_conversations
+                    SET contact_name = :name, last_message = :msg, last_message_at = :now,
+                        status = :status, messages_json = :msgs, updated_at = :now
+                    WHERE id = :id
+                """), {"name": contact_name, "msg": last_message, "now": now,
+                       "status": status, "msgs": messages_json, "id": row[0]})
+                return {"id": row[0], "updated": True}
+            else:
+                conv_id = str(uuid4())
+                await conn.execute(text("""
+                    INSERT INTO whatsapp_conversations
+                        (id, tenant_id, contact_phone, contact_name, last_message,
+                         last_message_at, status, messages_json, created_at, updated_at)
+                    VALUES (:id, :tid, :phone, :name, :msg, :now, :status, :msgs, :now, :now)
+                """), {"id": conv_id, "tid": tenant_id, "phone": contact_phone,
+                       "name": contact_name, "msg": last_message, "now": now,
+                       "status": status, "msgs": messages_json})
+                return {"id": conv_id, "updated": False}
+
+    async def get_whatsapp_conversations(self, tenant_id: str) -> List[Dict[str, Any]]:
+        async with engine.connect() as conn:
+            result = await conn.execute(text("""
+                SELECT id, contact_phone, contact_name, last_message, last_message_at, status, messages_json
+                FROM whatsapp_conversations WHERE tenant_id = :tid
+                ORDER BY last_message_at DESC
+            """), {"tid": tenant_id})
+            return [
+                {"id": r[0], "contactPhone": r[1], "contactName": r[2],
+                 "lastMessage": r[3], "lastMessageAt": r[4], "status": r[5], "messages": r[6]}
+                for r in result.fetchall()
+            ]
+
+    # ============ Inter-BU Tasks ============
+
+    async def create_inter_bu_task(self, tenant_id: str, from_bu: str, to_bu: str,
+                                   task_type: str, briefing: str) -> Dict[str, Any]:
+        task_id = str(uuid4())
+        created_at = int(time.time() * 1000)
+        async with engine.begin() as conn:
+            await conn.execute(text("""
+                INSERT INTO inter_bu_tasks
+                    (id, tenant_id, from_bu, to_bu, task_type, briefing, status, created_at)
+                VALUES (:id, :tid, :from_bu, :to_bu, :task_type, :briefing, 'pending', :created_at)
+            """), {"id": task_id, "tid": tenant_id, "from_bu": from_bu, "to_bu": to_bu,
+                   "task_type": task_type, "briefing": briefing, "created_at": created_at})
+        return {"id": task_id, "from_bu": from_bu, "to_bu": to_bu,
+                "task_type": task_type, "status": "pending", "created_at": created_at}
+
+    async def get_inter_bu_task(self, task_id: str, tenant_id: str) -> Optional[Dict[str, Any]]:
+        async with engine.connect() as conn:
+            result = await conn.execute(text("""
+                SELECT id, tenant_id, from_bu, to_bu, task_type, briefing, status, result, created_at, completed_at
+                FROM inter_bu_tasks WHERE id = :id AND tenant_id = :tid
+            """), {"id": task_id, "tid": tenant_id})
+            row = result.fetchone()
+            if row:
+                return {"id": row[0], "tenant_id": row[1], "from_bu": row[2], "to_bu": row[3],
+                        "task_type": row[4], "briefing": row[5], "status": row[6],
+                        "result": row[7], "created_at": row[8], "completed_at": row[9]}
+        return None
+
+    async def update_inter_bu_task(self, task_id: str, status: str,
+                                   result: Optional[str] = None) -> bool:
+        completed_at = int(time.time() * 1000) if status in ("done", "failed") else None
+        async with engine.begin() as conn:
+            if completed_at:
+                await conn.execute(text("""
+                    UPDATE inter_bu_tasks
+                    SET status = :status, result = :result, completed_at = :completed_at
+                    WHERE id = :id
+                """), {"status": status, "result": result, "completed_at": completed_at, "id": task_id})
+            else:
+                await conn.execute(text("""
+                    UPDATE inter_bu_tasks SET status = :status WHERE id = :id
+                """), {"status": status, "id": task_id})
+        return True
+
+    async def get_pending_inter_bu_tasks(self, tenant_id: str, to_bu: str) -> List[Dict[str, Any]]:
+        async with engine.connect() as conn:
+            result = await conn.execute(text("""
+                SELECT id, from_bu, task_type, briefing, created_at
+                FROM inter_bu_tasks
+                WHERE tenant_id = :tid AND to_bu = :to_bu AND status = 'pending'
+                ORDER BY created_at ASC
+            """), {"tid": tenant_id, "to_bu": to_bu})
+            return [{"id": r[0], "from_bu": r[1], "task_type": r[2],
+                     "briefing": r[3], "created_at": r[4]} for r in result.fetchall()]
+
+    # ============ BU Memory ============
+
+    async def save_bu_memory(self, tenant_id: str, category: str, key_name: str,
+                             value: str, bu_origin: Optional[str] = None,
+                             confidence: float = 1.0) -> Dict[str, Any]:
+        """Upsert: se já existe (tenant+category+key_name), atualiza. Senão, insere."""
+        now = int(time.time() * 1000)
+        async with engine.begin() as conn:
+            existing = await conn.execute(text("""
+                SELECT id FROM bu_memory
+                WHERE tenant_id = :tid AND category = :cat AND key_name = :key
+            """), {"tid": tenant_id, "cat": category, "key": key_name})
+            row = existing.fetchone()
+            if row:
+                await conn.execute(text("""
+                    UPDATE bu_memory
+                    SET value = :value, confidence = :conf, bu_origin = :bu_origin, updated_at = :now
+                    WHERE id = :id
+                """), {"value": value, "conf": confidence, "bu_origin": bu_origin,
+                       "now": now, "id": row[0]})
+                return {"id": row[0], "category": category, "key_name": key_name, "updated": True}
+            else:
+                mem_id = str(uuid4())
+                await conn.execute(text("""
+                    INSERT INTO bu_memory
+                        (id, tenant_id, bu_origin, category, key_name, value, confidence, created_at, updated_at)
+                    VALUES (:id, :tid, :bu_origin, :cat, :key, :value, :conf, :now, :now)
+                """), {"id": mem_id, "tid": tenant_id, "bu_origin": bu_origin,
+                       "cat": category, "key": key_name, "value": value,
+                       "conf": confidence, "now": now})
+                return {"id": mem_id, "category": category, "key_name": key_name, "updated": False}
+
+    async def get_bu_memories(self, tenant_id: str,
+                              category: Optional[str] = None,
+                              limit: int = 20) -> List[Dict[str, Any]]:
+        async with engine.connect() as conn:
+            if category:
+                result = await conn.execute(text("""
+                    SELECT id, bu_origin, category, key_name, value, confidence, updated_at
+                    FROM bu_memory
+                    WHERE tenant_id = :tid AND category = :cat
+                    ORDER BY updated_at DESC LIMIT :limit
+                """), {"tid": tenant_id, "cat": category, "limit": limit})
+            else:
+                result = await conn.execute(text("""
+                    SELECT id, bu_origin, category, key_name, value, confidence, updated_at
+                    FROM bu_memory
+                    WHERE tenant_id = :tid
+                    ORDER BY updated_at DESC LIMIT :limit
+                """), {"tid": tenant_id, "limit": limit})
+            return [{"id": r[0], "bu_origin": r[1], "category": r[2], "key_name": r[3],
+                     "value": r[4], "confidence": r[5], "updated_at": r[6]}
+                    for r in result.fetchall()]
+
     # ============ Project Infra (registro no banco principal) ============
 
     async def upsert_project_infra(self, project_id: str, tenant_id: str, db_path: str,

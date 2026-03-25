@@ -197,6 +197,35 @@ async def init_db() -> None:
             )
         """))
 
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS inter_bu_tasks (
+                id TEXT PRIMARY KEY,
+                tenant_id TEXT NOT NULL,
+                from_bu TEXT NOT NULL,
+                to_bu TEXT NOT NULL,
+                task_type TEXT NOT NULL,
+                briefing TEXT NOT NULL,
+                status TEXT DEFAULT 'pending',
+                result TEXT,
+                created_at INTEGER,
+                completed_at INTEGER
+            )
+        """))
+
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS bu_memory (
+                id TEXT PRIMARY KEY,
+                tenant_id TEXT NOT NULL,
+                bu_origin TEXT,
+                category TEXT NOT NULL,
+                key_name TEXT NOT NULL,
+                value TEXT NOT NULL,
+                confidence REAL DEFAULT 1.0,
+                created_at INTEGER,
+                updated_at INTEGER
+            )
+        """))
+
         # Migração: adiciona custom_domain se não existir (compatibilidade com DBs antigos)
         if IS_SQLITE:
             try:
@@ -212,6 +241,62 @@ async def init_db() -> None:
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_projects_tenant ON projects(tenant_id)"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_memory_tenant ON memory(tenant_id)"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_leads_project ON leads(project_id)"))
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS sales_pipeline (
+                id TEXT PRIMARY KEY,
+                tenant_id TEXT NOT NULL,
+                name TEXT,
+                email TEXT,
+                phone TEXT,
+                company TEXT,
+                role TEXT,
+                linkedin_url TEXT,
+                source TEXT DEFAULT 'manual',
+                fit_score INTEGER DEFAULT 0,
+                stage TEXT DEFAULT 'prospectado',
+                notes TEXT,
+                last_contact INTEGER,
+                next_action TEXT,
+                created_at INTEGER,
+                updated_at INTEGER
+            )
+        """))
+
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS email_sequences (
+                id TEXT PRIMARY KEY,
+                tenant_id TEXT NOT NULL,
+                name TEXT,
+                target_segment TEXT,
+                status TEXT DEFAULT 'draft',
+                emails_json TEXT,
+                stats_json TEXT,
+                created_at INTEGER,
+                updated_at INTEGER
+            )
+        """))
+
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS whatsapp_conversations (
+                id TEXT PRIMARY KEY,
+                tenant_id TEXT NOT NULL,
+                contact_phone TEXT NOT NULL,
+                contact_name TEXT,
+                last_message TEXT,
+                last_message_at INTEGER,
+                status TEXT DEFAULT 'auto',
+                messages_json TEXT,
+                created_at INTEGER,
+                updated_at INTEGER
+            )
+        """))
+
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_inter_bu_tasks_tenant ON inter_bu_tasks(tenant_id)"))
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_inter_bu_tasks_status ON inter_bu_tasks(tenant_id, status)"))
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_bu_memory_tenant ON bu_memory(tenant_id, category)"))
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_sales_pipeline_tenant ON sales_pipeline(tenant_id, stage)"))
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_email_sequences_tenant ON email_sequences(tenant_id)"))
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_whatsapp_tenant ON whatsapp_conversations(tenant_id)"))
 
     # Seed: cria admin padrão se não existir
     await _seed_admin()

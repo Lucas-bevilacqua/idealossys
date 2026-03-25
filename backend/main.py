@@ -38,6 +38,7 @@ from .routes.leads import router as leads_router
 from .routes.project_infra import provision_router as infra_provision_router
 from .routes.project_infra import project_api_router as infra_api_router
 from .routes.publish import router as publish_router
+from .routes.sales import router as sales_router
 
 _is_dev = os.getenv("ENVIRONMENT", "development") == "development"
 
@@ -135,6 +136,7 @@ app.include_router(leads_router)
 app.include_router(infra_provision_router)
 app.include_router(infra_api_router)
 app.include_router(publish_router)
+app.include_router(sales_router)
 
 
 # ── Periodic job cleanup (iniciado pelo lifespan) ─────────────────────────────

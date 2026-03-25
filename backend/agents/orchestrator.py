@@ -13,14 +13,19 @@ model = Gemini(id="gemini-2.5-flash", api_key=_api_key)
 
 def get_os_core_team(tenant_id: str, event_queue: asyncio.Queue = None) -> Team:
     tools = make_tools(tenant_id=tenant_id, event_queue=event_queue)
-    create_task, update_task_status, generate_artifact, generate_landing_page, create_project, save_memory, get_memories, analyze_website, get_latest_artifact, edit_landing_page, fetch_stock_images, provision_project_database = tools
+    (create_task, update_task_status, generate_artifact, generate_landing_page,
+     create_project, save_memory, get_memories, analyze_website, get_latest_artifact,
+     edit_landing_page, fetch_stock_images, provision_project_database,
+     get_company_context, create_inter_bu_task, get_inter_bu_task_result,
+     save_bu_memory, get_bu_memories,
+     manage_sales_lead, generate_email_sequence, search_leads, send_whatsapp_message) = tools
 
     # ── Luna - Business Analyst ──────────────────────────────────────────────
     analyst_agent = Agent(
         name="Luna",
         role="Business Analyst",
         model=model,
-        tools=[create_task, update_task_status, generate_artifact, save_memory, get_memories, analyze_website],
+        tools=[create_task, update_task_status, generate_artifact, save_memory, get_memories, analyze_website, get_company_context, save_bu_memory],
         instructions=(
             "Você é Luna, Business Analyst sênior do IdealOS. Especialista em pesquisa de mercado, análise competitiva e elicitação de requisitos.\n\n"
             "SEPARAÇÃO DE IDENTIDADE: Você trabalha NA plataforma IdealOS, mas cria conteúdo PARA a empresa do cliente. Nunca mencione 'IdealOS' em artefatos, documentos ou páginas gerados para o cliente. Use APENAS o nome e dados reais da empresa do contexto e das memórias.\n\n"
@@ -121,7 +126,7 @@ def get_os_core_team(tenant_id: str, event_queue: asyncio.Queue = None) -> Team:
         name="Alex",
         role="Designer UX/UI",
         model=model,
-        tools=[create_task, update_task_status, generate_artifact, save_memory, get_memories],
+        tools=[create_task, update_task_status, generate_artifact, save_memory, get_memories, get_company_context],
         instructions=(
             "Você é Alex, Designer UX/UI sênior. 7+ anos criando experiências intuitivas para web e mobile.\n\n"
             "SEPARAÇÃO DE IDENTIDADE: Você trabalha NA plataforma IdealOS, mas cria conteúdo PARA a empresa do cliente. Nunca mencione 'IdealOS' em artefatos, design specs ou páginas geradas para o cliente. Use APENAS o nome, cores e identidade real da empresa do contexto e das memórias.\n\n"
@@ -175,7 +180,7 @@ def get_os_core_team(tenant_id: str, event_queue: asyncio.Queue = None) -> Team:
         name="Bruno",
         role="Dev Frontend",
         model=model,
-        tools=[create_task, update_task_status, generate_artifact, generate_landing_page, save_memory, get_memories, get_latest_artifact, edit_landing_page, fetch_stock_images],
+        tools=[create_task, update_task_status, generate_artifact, generate_landing_page, save_memory, get_memories, get_latest_artifact, edit_landing_page, fetch_stock_images, get_company_context],
         instructions=(
             "Você é Bruno, Dev Frontend sênior. Especialista em landing pages de conversão de altíssima qualidade.\n\n"
             "SEPARAÇÃO DE IDENTIDADE: Você trabalha NA plataforma IdealOS, mas cria páginas PARA a empresa do cliente. NUNCA mencione 'IdealOS' em nenhuma parte do HTML, copy, textos ou comentários gerados. Use APENAS o nome, slogan, cores e dados reais da empresa do contexto e das memórias.\n\n"

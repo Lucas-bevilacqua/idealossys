@@ -71,37 +71,82 @@ export const AREAS: Area[] = [
     id: 'marketing',
     name: 'Marketing',
     icon: 'Megaphone',
-    unlocked: false,
+    unlocked: true,
     description: 'Crescimento, conteúdo e performance.',
-    color: '#334155',
+    color: '#7c3aed',
     agents: [
       {
-        id: 'strat', name: 'Mariana', role: 'Estrategista Head',
-        avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Mariana&backgroundColor=334155',
+        id: 'mkt-head', name: 'Camila', role: 'Head de Marketing IA',
+        avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=CamilaMkt&backgroundColor=7c3aed&radius=50&facialHairProbability=0',
         status: 'idle',
-        skills: ['Brand Strategy', 'Growth', 'Analytics'],
-        processes: ['Planejamento de Campanha', 'Análise de Mercado', 'OKRs de Marketing']
+        skills: ['Estratégia', 'Orquestração', 'Crescimento'],
+        processes: ['Planejamento de Campanha', 'Coordenação de Time', 'OKRs de Marketing']
       },
       {
-        id: 'copy', name: 'João', role: 'Copywriter Sênior',
-        avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Joao&backgroundColor=475569',
+        id: 'strat', name: 'Mariana', role: 'Copywriter & Estrategista',
+        avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=MarianaStrat&backgroundColor=a855f7&radius=50&facialHairProbability=0',
         status: 'idle',
-        skills: ['Copywriting', 'SEO Copy', 'Email'],
-        processes: ['Produção de Conteúdo', 'A/B de Copies', 'Calendário Editorial']
+        skills: ['Copywriting', 'AIDA/PAS', 'Brand Voice'],
+        processes: ['Copy para Ads', 'Email Marketing', 'Landing Page Copy']
       },
       {
-        id: 'seo', name: 'Fernanda', role: 'Especialista SEO',
-        avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Fernanda&backgroundColor=64748b',
+        id: 'copy', name: 'João', role: 'Editor de Conteúdo',
+        avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=JoaoEdit&backgroundColor=6d28d9&radius=50&facialHairProbability=60&facialHair=beardMedium',
         status: 'idle',
-        skills: ['SEO Técnico', 'Keywords', 'Link Building'],
-        processes: ['Auditoria de SEO', 'Estratégia de Palavras-chave', 'Relatório Mensal']
+        skills: ['Calendário Editorial', 'SEO Copy', 'Briefing'],
+        processes: ['Produção de Conteúdo', 'Pauta Semanal', 'Calendário Editorial']
       },
       {
-        id: 'social', name: 'Ricardo', role: 'Social Media Manager',
-        avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Ricardo&backgroundColor=94a3b8',
+        id: 'seo', name: 'Fernanda', role: 'Especialista em Mídia Paga',
+        avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=FernandaSEO&backgroundColor=8b5cf6&radius=50&facialHairProbability=0',
         status: 'idle',
-        skills: ['Instagram', 'LinkedIn', 'Criativo'],
-        processes: ['Calendário de Posts', 'Análise de Engajamento', 'Campanhas Pagas']
+        skills: ['Meta Ads', 'Google Ads', 'ROAS'],
+        processes: ['Estrutura de Campanha', 'Segmentação de Público', 'Otimização de Budget']
+      },
+      {
+        id: 'social', name: 'Ricardo', role: 'Social Media & Performance',
+        avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=RicardoSocial&backgroundColor=5b21b6&radius=50&facialHairProbability=60&facialHair=beardMedium',
+        status: 'idle',
+        skills: ['Instagram', 'LinkedIn', 'Analytics'],
+        processes: ['Calendário de Posts', 'Análise de Engajamento', 'Relatório de Performance']
+      },
+    ]
+  },
+  {
+    id: 'vendas',
+    name: 'Vendas',
+    icon: 'TrendingUp',
+    unlocked: true,
+    description: 'Prospecção, cold email e atendimento WhatsApp.',
+    color: '#059669',
+    agents: [
+      {
+        id: 'sales-head', name: 'Rafael', role: 'Head de Vendas IA',
+        avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=RafaelSales&backgroundColor=059669&radius=50&facialHairProbability=80&facialHair=beardMedium',
+        status: 'idle',
+        skills: ['Estratégia de Vendas', 'Pipeline', 'Orquestração'],
+        processes: ['Gestão de Pipeline', 'Relatório Semanal', 'Priorização de Leads']
+      },
+      {
+        id: 'leads', name: 'Isabela', role: 'Especialista em Leads',
+        avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=IsabelaLeads&backgroundColor=10b981&radius=50&facialHairProbability=0',
+        status: 'idle',
+        skills: ['Levantamento de Leads', 'ICP', 'Qualificação BANT'],
+        processes: ['Pesquisa de Leads', 'Fit Score', 'Enriquecimento de Dados']
+      },
+      {
+        id: 'email', name: 'Victor', role: 'Especialista em Cold Email',
+        avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=VictorEmail&backgroundColor=047857&radius=50&facialHairProbability=60&facialHair=beardLight',
+        status: 'idle',
+        skills: ['Cold Email', 'Copywriting B2B', 'A/B Testing'],
+        processes: ['Sequência de Emails', 'Follow-up', 'Análise de Taxa de Resposta']
+      },
+      {
+        id: 'whatsapp', name: 'Leo', role: 'Agente WhatsApp IA',
+        avatar: 'https://api.dicebear.com/9.x/avataaars/svg?seed=LeoWhatsapp&backgroundColor=065f46&radius=50&facialHairProbability=40&facialHair=beardLight',
+        status: 'idle',
+        skills: ['WhatsApp', 'Atendimento Automatizado', 'Scripts de Vendas'],
+        processes: ['Resposta Automática', 'Qualificação via Chat', 'Escalação para Humano']
       },
     ]
   },
