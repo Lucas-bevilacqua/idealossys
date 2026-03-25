@@ -336,15 +336,15 @@ const ChatInput = ({ onSendMessage, isListening, toggleVoice, voiceTranscript = 
           <button type="button" onClick={() => setSelectedFile(null)} className="ml-2 text-accent hover:text-white transition-all"><X size={12} /></button>
         </div>
       )}
-      <div className="flex gap-2 w-full">
-        <div className="relative flex-1 flex items-center">
-          <button type="button" onClick={() => fileInputRef.current?.click()} className={`absolute ${showGlobe ? 'left-10' : 'left-3'} p-1.5 text-dim hover:text-accent`}><Paperclip size={18} /></button>
-          {showGlobe && <Globe size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-accent opacity-50" />}
+      <div className="flex gap-2 w-full min-w-0">
+        <div className="relative flex-1 min-w-0 flex items-center">
+          <button type="button" onClick={() => fileInputRef.current?.click()} className={`absolute ${showGlobe ? 'left-10' : 'left-3'} p-1.5 text-dim hover:text-accent z-10`}><Paperclip size={18} /></button>
+          {showGlobe && <Globe size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-accent opacity-50 z-10" />}
           <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*,.pdf,.txt,.js,.ts,.tsx,.css" />
-          <input value={isListening ? (voiceTranscript || 'Escutando...') : input} onChange={e => setInput(e.target.value)} placeholder={isListening ? 'Fale agora...' : (selectedFile ? 'Descreva o anexo...' : placeholder)} className={`flex-1 ${showGlobe ? 'pl-16 md:pl-20' : 'pl-10 md:pl-12'} pr-12 py-3 rounded-xl text-sm border focus:outline-none transition-all`} style={{ background: isListening ? '#3B82F610' : 'var(--bg)', borderColor: isListening ? '#3B82F6' : 'var(--border)', color: 'var(--text-main)' }} />
+          <input value={isListening ? (voiceTranscript || 'Escutando...') : input} onChange={e => setInput(e.target.value)} placeholder={isListening ? 'Fale agora...' : (selectedFile ? 'Descreva o anexo...' : placeholder)} className={`w-full min-w-0 ${showGlobe ? 'pl-16 md:pl-20' : 'pl-10 md:pl-12'} pr-12 py-3 rounded-xl text-sm border focus:outline-none transition-all`} style={{ background: isListening ? '#3B82F610' : 'var(--bg)', borderColor: isListening ? '#3B82F6' : 'var(--border)', color: 'var(--text-main)' }} />
           <button type="button" onClick={toggleVoice} className={`absolute right-3 p-1.5 transition-all ${isListening ? 'text-red-500 scale-125 bg-red-500/10 rounded-full ring-4 ring-red-500/20' : 'text-dim hover:text-accent'}`}>{isListening ? <MicOff size={18} /> : <Mic size={18} />}</button>
         </div>
-        <button type="submit" className="px-4 py-3 rounded-lg text-white font-bold bg-accent"><Send size={16} /></button>
+        <button type="submit" className="shrink-0 px-4 py-3 rounded-lg text-white font-bold bg-accent"><Send size={16} /></button>
       </div>
     </form>
   );
@@ -1144,11 +1144,11 @@ export default function App() {
               <div className="flex justify-between items-center">
                 <div><h2 className="text-xl md:text-3xl font-heading font-black text-main uppercase leading-tight">{context.name}</h2><p className="text-[10px] label-mono text-dim tracking-widest uppercase">Centro de Operações Ativo</p></div>
               </div>
-              <div className="premium-card p-4 md:p-8 bg-gradient-to-br from-accent/10 to-transparent border-accent/20">
+              <div className="premium-card p-4 md:p-8 bg-gradient-to-br from-accent/10 to-transparent border-accent/20 overflow-hidden w-full">
                 <div className="flex items-center gap-3 mb-6"><Activity size={14} className="text-accent animate-pulse" /><span className="label-mono text-[10px] font-black uppercase text-accent tracking-[0.3em]">Comando Global OS Core</span></div>
-                
+
                 {/* Global Message History */}
-                <div ref={globalScrollRef} className="mb-6 max-h-[420px] overflow-y-auto space-y-3 pr-2 scrollbar-hide">
+                <div ref={globalScrollRef} className="mb-6 max-h-[420px] overflow-y-auto overflow-x-hidden space-y-3 pr-2 scrollbar-hide">
                   {(Array.isArray(messages['global']) ? messages['global'] : []).map(m => {
                     const agentInfo = m.role === 'agent' ? getAgentInfo(m.senderId) : null;
 
@@ -1185,9 +1185,9 @@ export default function App() {
                       const cleaned = cleanRelayText(m.text);
                       if (!cleaned) return null;
                       return (
-                        <div key={m.id} className="flex gap-2 items-start animate-fade-in">
+                        <div key={m.id} className="flex gap-2 items-start animate-fade-in min-w-0">
                           <img src={agentInfo?.avatar || ''} alt={agentInfo?.name || m.senderName} className="w-5 h-5 rounded-full shrink-0 mt-0.5 ring-1 ring-white/10 opacity-70" />
-                          <div className="max-w-[90%] px-3 py-1.5 rounded-xl rounded-tl-none border-l-2 bg-white/[0.02] border border-white/[0.06]" style={{ borderLeftColor: agentInfo?.color || '#6366f1' }}>
+                          <div className="max-w-[90%] min-w-0 px-3 py-1.5 rounded-xl rounded-tl-none border-l-2 bg-white/[0.02] border border-white/[0.06] overflow-hidden break-words" style={{ borderLeftColor: agentInfo?.color || '#6366f1' }}>
                             <p className="text-[9px] font-black uppercase tracking-widest mb-1 opacity-70" style={{ color: agentInfo?.color || '#6366f1' }}>{m.senderName}</p>
                             <div className="text-[11px] text-dim/80 leading-relaxed line-clamp-3 overflow-hidden">
                               {cleaned}
@@ -1199,9 +1199,9 @@ export default function App() {
 
                     // Final summary or user message
                     return (
-                      <div key={m.id} className={`flex gap-2 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                      <div key={m.id} className={`flex gap-2 min-w-0 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                         {agentInfo && <img src={agentInfo.avatar} alt={agentInfo.name} className="w-6 h-6 rounded-full shrink-0 mt-0.5 ring-1 ring-white/10" />}
-                        <div className={`max-w-[88%] text-[11px] px-4 py-3 rounded-xl ${m.role === 'user' ? 'bg-accent/20 border border-accent/30 text-main rounded-tr-none' : 'bg-white/[0.05] border border-white/10 text-main rounded-tl-none'}`}>
+                        <div className={`max-w-[88%] min-w-0 text-[11px] px-4 py-3 rounded-xl overflow-hidden break-words ${m.role === 'user' ? 'bg-accent/20 border border-accent/30 text-main rounded-tr-none' : 'bg-white/[0.05] border border-white/10 text-main rounded-tl-none'}`}>
                           {agentInfo && <p className="text-[9px] font-black uppercase tracking-widest mb-2 pb-1.5 border-b border-white/[0.06]" style={{ color: agentInfo.color }}>{agentInfo.name}</p>}
                           <Markdown components={mdComponents}>{m.text}</Markdown>
                         </div>
