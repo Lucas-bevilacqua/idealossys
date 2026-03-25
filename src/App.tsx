@@ -138,9 +138,10 @@ const getFileIcon = (title: string) => {
   return '📄';
 };
 
-const AgentInteractionBlock = ({ execution, isLive = false }: {
+const AgentInteractionBlock = ({ execution, isLive = false, onCancel }: {
   execution: ExecutionState;
   isLive?: boolean;
+  onCancel?: () => void;
 }) => {
   if (!execution.plan.length) return null;
 
@@ -170,6 +171,17 @@ const AgentInteractionBlock = ({ execution, isLive = false }: {
         <p className={`text-[9px] label-mono uppercase tracking-[0.2em] font-black flex-1 ${isInterrupted ? 'text-amber-400/80' : 'text-main/60'}`}>
           {headerLabel}
         </p>
+        {/* Cancel button — only when actively running */}
+        {isLive && !execution.done && onCancel && (
+          <button
+            onClick={onCancel}
+            className="flex items-center gap-1 px-2 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider text-red-400/70 hover:text-red-400 hover:bg-red-400/10 transition-all border border-red-400/20 hover:border-red-400/40 label-mono"
+            title="Limpar estado de execução"
+          >
+            <X size={10} />
+            Cancelar
+          </button>
+        )}
         {/* Progress bar */}
         {!isInterrupted && (
           <div className="w-20 h-1 rounded-full bg-white/5 overflow-hidden">
@@ -1205,7 +1217,7 @@ export default function App() {
                   )}
                 </div>
 
-                {execution.plan.length > 0 && (!execution.areaId || execution.areaId === 'global') && <AgentInteractionBlock execution={execution} isLive={isTyping} />}
+                {execution.plan.length > 0 && (!execution.areaId || execution.areaId === 'global') && <AgentInteractionBlock execution={execution} isLive={isTyping} onCancel={() => { setIsTyping(false); setExecution({ plan: [], agentStatus: {}, agentActions: {}, activeAgent: null, done: false }); clearActiveJobId(); }} />}
                 <ChatInput onSendMessage={(text: string, _: any, att: any) => sendMessage(text, 'global', att)} isListening={isListening} toggleVoice={toggleVoiceCommand} voiceTranscript={voiceInput} placeholder="Dê uma ordem para sua empresa..." showGlobe />
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
@@ -1524,7 +1536,7 @@ export default function App() {
                     </div>
                   );
                 })}
-                {execution.plan.length > 0 && (!execution.areaId || execution.areaId === selectedArea.id) && <AgentInteractionBlock execution={execution} isLive={isTyping} />}
+                {execution.plan.length > 0 && (!execution.areaId || execution.areaId === selectedArea.id) && <AgentInteractionBlock execution={execution} isLive={isTyping} onCancel={() => { setIsTyping(false); setExecution({ plan: [], agentStatus: {}, agentActions: {}, activeAgent: null, done: false }); clearActiveJobId(); }} />}
                 {isTyping && (!execution.areaId || execution.areaId === selectedArea.id) && !execution.plan.length && (
                   <div className="flex gap-3 items-center">
                     <img src={getAgentInfo(selectedArea.agents[0]?.id || 'os-core').avatar} className="w-8 h-8 rounded-full ring-1 ring-white/10" alt="agent" />

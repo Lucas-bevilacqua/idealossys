@@ -641,8 +641,15 @@ RULE: ONLY the 3 background-image divs + 3 avatar <img> + 1 logo = 7 image eleme
    - Trust row: 3–4 pill badges
 
 3. LOGO BAR (social proof)
-   Infinite marquee animation — CSS @keyframes scroll — 6–8 company names as SVG text logos.
-   Style: grayscale, on hover full color. Section bg: slightly lighter than hero.
+   Infinite marquee animation — CSS @keyframes marquee — 8 company names as PLAIN TEXT (NOT SVG icons — use only text inside <span> tags styled with CSS).
+   Example HTML structure:
+   <section class="logo-bar"><div class="logo-marquee"><div class="logo-marquee-inner">
+     <span class="logo-item">Empresa A</span><span class="logo-item">Empresa B</span>...
+     (repeat the same set twice for seamless loop)
+   </div></div></section>
+   CSS: .logo-item {{ font-weight: 700; font-size: 1.1rem; opacity: 0.35; padding: 0 2.5rem; white-space: nowrap; letter-spacing: 0.05em; text-transform: uppercase; transition: opacity 0.3s; }}
+   .logo-item:hover {{ opacity: 0.9; }}
+   CRITICAL: DO NOT use <svg>, <path>, or any inline SVG here — text only. Section bg: slightly lighter than hero.
 
 4. ABOUT / WHY US
    Asymmetric 2-col: photo div LEFT (about-photo), text RIGHT — or swap if that looks better for the brand.

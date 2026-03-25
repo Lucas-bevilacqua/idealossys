@@ -120,6 +120,67 @@ def validate_and_fix_html(html: str, **_kwargs) -> str:
         html = html.replace('</style>', btn_css + '  </style>', 1)
         fixes.append("btn-base-css")
 
+    # ── 8. Kill runaway/looping SVG paths ────────────────────────────────────
+    # Gemini sometimes generates logo-bar sections with SVG <path d="..."> that
+    # repeat the same short pattern thousands of times, inflating the file to
+    # megabytes and freezing the browser. Detect and replace with text logos.
+    def _fix_runaway_svg(html: str) -> str:
+        """Replace any <svg> whose <path d="..."> payload repeats a short chunk
+        more than 30 times with a simple text placeholder."""
+        def _check_svg(m: re.Match) -> str:
+            svg_block = m.group(0)
+            # Find first <path d="..."> value
+            path_match = re.search(r'<path\b[^>]*\bd="([^"]{10,})"', svg_block)
+            if not path_match:
+                return svg_block
+            d_val = path_match.group(1)
+            # Detect repetition: take a 30-char prefix and count occurrences
+            prefix = d_val[:30]
+            count = d_val.count(prefix)
+            if count > 30:
+                # Replace entire SVG with a hidden placeholder
+                return '<!-- svg-removed: runaway-path -->'
+            return svg_block
+        return re.sub(r'<svg\b[^>]*>.*?</svg>', _check_svg, html, flags=re.DOTALL)
+
+    original_len = len(html)
+    html = _fix_runaway_svg(html)
+    if len(html) < original_len - 1000:
+        fixes.append(f"runaway-svg-removed({original_len - len(html)} chars)")
+
+    # ── 9. Replace logo-bar SVG section with text-only marquee if broken ─────
+    # If the logo-bar section has no <span class="logo-item"> but has SVG remnants
+    # or is nearly empty after SVG removal, inject a clean text-only marquee.
+    logo_bar_match = re.search(r'(<section[^>]*class="[^"]*logo-bar[^"]*"[^>]*>)(.*?)(</section>)',
+                                html, flags=re.DOTALL)
+    if logo_bar_match:
+        bar_content = logo_bar_match.group(2)
+        # If logo-bar has no meaningful text content (just whitespace/comments/empty spans)
+        text_content = re.sub(r'<!--.*?-->', '', bar_content, flags=re.DOTALL)
+        text_content = re.sub(r'<[^>]+>', '', text_content).strip()
+        if len(text_content) < 50:
+            safe_marquee = (
+                '\n  <div class="container" style="overflow:hidden">'
+                '\n    <div class="logo-marquee-inner" style="display:flex;width:max-content;'
+                'animation:marquee 30s linear infinite;gap:0;align-items:center;">'
+                '\n      <span class="logo-item">Empresa A</span>'
+                '<span class="logo-item">Empresa B</span>'
+                '<span class="logo-item">Empresa C</span>'
+                '<span class="logo-item">Empresa D</span>'
+                '<span class="logo-item">Empresa E</span>'
+                '<span class="logo-item">Empresa F</span>'
+                '<span class="logo-item">Empresa A</span>'
+                '<span class="logo-item">Empresa B</span>'
+                '<span class="logo-item">Empresa C</span>'
+                '<span class="logo-item">Empresa D</span>'
+                '<span class="logo-item">Empresa E</span>'
+                '<span class="logo-item">Empresa F</span>'
+                '\n    </div>'
+                '\n  </div>\n'
+            )
+            html = html[:logo_bar_match.start(2)] + safe_marquee + html[logo_bar_match.end(2):]
+            fixes.append("logo-bar-text-fallback")
+
     if fixes:
         print(f"[VALIDATE] Python fixes applied: {', '.join(fixes)}")
     else:
