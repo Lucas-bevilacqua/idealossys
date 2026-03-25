@@ -4,7 +4,7 @@ import {
   ChevronRight, Send, ArrowLeft, LayoutDashboard, Trello, MessageSquare,
   Plus, CheckCircle2, Clock, AlertCircle, Activity, Brain, Layers, Search,
   Menu, X, Sun, Moon, ChevronDown, CreditCard, Settings, FileCode, Eye,
-  MoreVertical, History, Network, Mic, MicOff, Volume2, Globe, LayoutGrid, Paperclip, ChevronUp, Trash2, Zap, FolderGit2
+  MoreVertical, History, Network, Mic, MicOff, Volume2, Globe, LayoutGrid, Paperclip, ChevronUp, Trash2, Zap, FolderGit2, Upload
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import Markdown from 'react-markdown';
@@ -382,6 +382,8 @@ export default function App() {
   const [showDomainModal, setShowDomainModal] = useState(false);
   const [publishState, setPublishState] = useState<{ loading: boolean; publicUrl: string | null; customDomain: string | null; domainInput: string }>({ loading: false, publicUrl: null, customDomain: null, domainInput: '' });
   const [voiceInput, setVoiceInput] = useState('');
+  const [logoFile, setLogoFile] = useState<string | null>(null); // base64 data URL
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -662,6 +664,14 @@ export default function App() {
     jobCheckDoneRef.current = false;
   };
 
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => setLogoFile(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
   const handleOnboarding = async (e: any) => {
     e.preventDefault();
     const f = e.target;
@@ -674,7 +684,7 @@ export default function App() {
       targetAudience: f.elements.targetAudience.value,
       challenges: f.elements.challenges.value,
       websiteUrl: f.elements.websiteUrl.value,
-      logoUrl: f.elements.logoUrl.value,
+      logoUrl: logoFile || f.elements.logoUrl?.value || context.logoUrl || '',
       brandColors: f.elements.brandColors.value,
       brandTone: f.elements.brandTone.value,
     };
@@ -997,17 +1007,34 @@ export default function App() {
             <div><label className="label-mono block mb-1.5 text-[10px] uppercase opacity-60 font-bold">Nome da Empresa *</label><input name="companyName" required className="w-full px-4 py-3 rounded-lg border bg-black/20 text-main focus:border-accent outline-none text-sm" defaultValue={context.name} /></div>
             <div><label className="label-mono block mb-1.5 text-[10px] uppercase opacity-60 font-bold">Setor / Indústria *</label><input name="industry" required className="w-full px-4 py-3 rounded-lg border bg-black/20 text-main focus:border-accent outline-none text-sm" defaultValue={context.industry || ''} /></div>
           </div>
-          <div><label className="label-mono block mb-1.5 text-[10px] uppercase opacity-60 font-bold">O que sua empresa faz? *</label><textarea name="description" required className="w-full px-4 py-3 rounded-lg border bg-black/20 text-main focus:border-accent outline-none h-16 resize-none text-sm" defaultValue={context.description || ''} placeholder="Ex: Somos uma plataforma SaaS de automação para PMEs..." /></div>
+          <div><label className="label-mono block mb-1.5 text-[10px] uppercase opacity-60 font-bold">O que sua empresa faz? *</label><textarea name="description" required className="w-full px-4 py-3 rounded-lg border bg-black/20 text-main focus:border-accent outline-none h-16 resize-none text-sm" defaultValue={context.description || ''} placeholder="Ex: Somos uma plataforma SaaS de automação para PMEs..." /><p className="text-[9px] text-dim mt-1 opacity-60">💡 Seja específico: produto/serviço, mercado, diferenciais. Os agentes usam isso para criar todo o conteúdo.</p></div>
 
           {/* Seção: Marca */}
           <p className="text-[9px] label-mono text-accent/60 uppercase tracking-[0.25em] font-black pt-2">02 · Identidade Visual da Marca</p>
           <div>
-            <label className="label-mono block mb-1.5 text-[10px] uppercase opacity-60 font-bold">URL da Logo</label>
-            <input name="logoUrl" placeholder="https://suaempresa.com/logo.png" className="w-full px-4 py-3 rounded-lg border bg-black/20 text-main focus:border-accent outline-none text-sm" defaultValue={context.logoUrl || ''} />
-            <p className="text-[9px] text-dim mt-1 opacity-60">Os agentes usarão sua logo ao criar páginas e materiais.</p>
+            <label className="label-mono block mb-1.5 text-[10px] uppercase opacity-60 font-bold">Logo da Empresa</label>
+            <input ref={logoInputRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+            <div
+              onClick={() => logoInputRef.current?.click()}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border bg-black/20 cursor-pointer hover:border-accent/50 transition-all text-sm"
+              style={{ borderColor: 'var(--border)' }}
+            >
+              {(logoFile || context.logoUrl) ? (
+                <>
+                  <img src={logoFile || context.logoUrl || ''} alt="Logo" className="h-8 w-auto object-contain rounded" />
+                  <span className="text-dim text-xs">Clique para trocar</span>
+                </>
+              ) : (
+                <>
+                  <Upload size={16} className="text-dim shrink-0" />
+                  <span className="text-dim text-xs">Clique para enviar sua logo (PNG, JPG, SVG)</span>
+                </>
+              )}
+            </div>
+            <p className="text-[9px] text-dim mt-1 opacity-60">Usada pelos agentes ao criar landing pages e materiais da sua marca.</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label className="label-mono block mb-1.5 text-[10px] uppercase opacity-60 font-bold">Cores da Marca</label><input name="brandColors" placeholder="Ex: #1A1A2E, #E94560, branco" className="w-full px-4 py-3 rounded-lg border bg-black/20 text-main focus:border-accent outline-none text-sm" defaultValue={context.brandColors || ''} /></div>
+            <div><label className="label-mono block mb-1.5 text-[10px] uppercase opacity-60 font-bold">Cores da Marca</label><input name="brandColors" placeholder="Ex: #1A1A2E, #E94560, branco" className="w-full px-4 py-3 rounded-lg border bg-black/20 text-main focus:border-accent outline-none text-sm" defaultValue={context.brandColors || ''} /><p className="text-[9px] text-dim mt-1 opacity-60">Hex ou nomes: #1A1A2E, azul royal, dourado. O designer usará para criar a identidade visual.</p></div>
             <div><label className="label-mono block mb-1.5 text-[10px] uppercase opacity-60 font-bold">Tom de Voz / Estilo</label>
               <select name="brandTone" className="w-full px-4 py-3 rounded-lg border bg-black/20 text-main focus:border-accent outline-none text-sm" defaultValue={context.brandTone || ''}>
                 <option value="">Selecione</option>
@@ -1034,11 +1061,12 @@ export default function App() {
                 <option value="Aumentar reconhecimento de marca">Reconhecimento de Marca</option>
                 <option value="Lançar novo produto ou serviço">Lançar Produto/Serviço</option>
               </select>
+              <p className="text-[9px] text-dim mt-1 opacity-60">Define o foco de tudo que os agentes criarão para você.</p>
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><label className="label-mono block mb-1.5 text-[10px] uppercase opacity-60 font-bold">Público-Alvo</label><input name="targetAudience" placeholder="Ex: PMEs, CEOs de tecnologia..." className="w-full px-4 py-3 rounded-lg border bg-black/20 text-main focus:border-accent outline-none text-sm" defaultValue={context.targetAudience || ''} /></div>
-            <div><label className="label-mono block mb-1.5 text-[10px] uppercase opacity-60 font-bold">Maiores Desafios</label><input name="challenges" placeholder="Ex: Geração de leads, retenção..." className="w-full px-4 py-3 rounded-lg border bg-black/20 text-main focus:border-accent outline-none text-sm" defaultValue={context.challenges || ''} /></div>
+            <div><label className="label-mono block mb-1.5 text-[10px] uppercase opacity-60 font-bold">Público-Alvo</label><input name="targetAudience" placeholder="Ex: PMEs, CEOs de tecnologia..." className="w-full px-4 py-3 rounded-lg border bg-black/20 text-main focus:border-accent outline-none text-sm" defaultValue={context.targetAudience || ''} /><p className="text-[9px] text-dim mt-1 opacity-60">Ex: "PMEs do setor de saúde, donos de clínica, 30-50 anos"</p></div>
+            <div><label className="label-mono block mb-1.5 text-[10px] uppercase opacity-60 font-bold">Maiores Desafios</label><input name="challenges" placeholder="Ex: Geração de leads, retenção..." className="w-full px-4 py-3 rounded-lg border bg-black/20 text-main focus:border-accent outline-none text-sm" defaultValue={context.challenges || ''} /><p className="text-[9px] text-dim mt-1 opacity-60">Ex: "Pouca visibilidade online, ticket médio baixo, alta concorrência"</p></div>
           </div>
 
           <button type="submit" className="w-full py-4 rounded-xl font-black text-white text-xs uppercase bg-accent shadow-xl shadow-accent/20 mt-2 hover:scale-[1.01] transition-all">Ativar Núcleo Neural →</button>
@@ -1347,9 +1375,26 @@ export default function App() {
 
                 <p className="text-[9px] label-mono text-accent/60 uppercase tracking-[0.25em] font-black pt-2">02 · Identidade Visual</p>
                 <div>
-                  <label className="label-mono block mb-1.5 text-[10px] uppercase opacity-60 font-bold">URL da Logo</label>
-                  <input name="logoUrl" placeholder="https://suaempresa.com/logo.png" className="w-full px-4 py-3 rounded-lg border bg-black/20 text-main focus:border-accent outline-none text-sm" defaultValue={context.logoUrl || ''} />
-                  {context.logoUrl && <img src={context.logoUrl} alt="Logo atual" className="mt-2 h-10 object-contain opacity-80" />}
+                  <label className="label-mono block mb-1.5 text-[10px] uppercase opacity-60 font-bold">Logo da Empresa</label>
+                  <input ref={logoInputRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+                  <div
+                    onClick={() => logoInputRef.current?.click()}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border bg-black/20 cursor-pointer hover:border-accent/50 transition-all text-sm"
+                    style={{ borderColor: 'var(--border)' }}
+                  >
+                    {(logoFile || context.logoUrl) ? (
+                      <>
+                        <img src={logoFile || context.logoUrl || ''} alt="Logo" className="h-8 w-auto object-contain rounded" />
+                        <span className="text-dim text-xs">Clique para trocar</span>
+                      </>
+                    ) : (
+                      <>
+                        <Upload size={16} className="text-dim shrink-0" />
+                        <span className="text-dim text-xs">Clique para enviar sua logo (PNG, JPG, SVG)</span>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-[9px] text-dim mt-1 opacity-60">Usada pelos agentes ao criar landing pages e materiais da sua marca.</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div><label className="label-mono block mb-1.5 text-[10px] uppercase opacity-60 font-bold">Cores da Marca</label><input name="brandColors" placeholder="Ex: #1A1A2E, #E94560" className="w-full px-4 py-3 rounded-lg border bg-black/20 text-main focus:border-accent outline-none text-sm" defaultValue={context.brandColors || ''} /></div>

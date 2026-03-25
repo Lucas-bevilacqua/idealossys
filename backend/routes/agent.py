@@ -497,6 +497,8 @@ async def agent_stream(request: Request, current_user: dict = Depends(get_curren
                            f"Desafios: {tenant.get('challenges','')}\n"
                            f"Tom da marca: {tenant.get('brand_tone','') or 'profissional e inovador'}\n"
                            f"Cores da marca: {tenant.get('brand_colors','') or 'a definir'}\n"
+                           f"Site: {tenant.get('website_url','') or 'não informado'}\n"
+                           f"Logo URL: {tenant.get('logo_url','') or 'não disponível'}\n"
                            f"━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
         def _sanitize(text: str, max_len: int = 500) -> str:
