@@ -660,18 +660,46 @@ WHAT MAKES THESE SITES PREMIUM:
 9. Marquee / infinite scroll for client logos
 10. Micro-interactions on buttons (scale + shadow on hover)
 
-━━━ STOCK IMAGES — EXACT PLACEMENT ━━━
-HERO background (CSS only — NEVER a raw <img>):
-  <section class="hero" style="background-image:url('{imgs[0]}')">
-  The .hero::before pseudo-element creates the overlay — include it in CSS.
+━━━ STOCK IMAGES — USE ALL OF THEM, EXACT PLACEMENT ━━━
+You have 8 stock photos + 3 avatars. USE ALL 8 stock photos — none should be wasted.
 
-ABOUT section decorative photo (right column, no text on top):
+① HERO background (full-viewport, CSS background-image only — NEVER a raw <img>):
+  <section class="hero" style="background-image:url('{imgs[0]}')">
+  .hero::before overlay is mandatory (see CSS section).
+
+② SERVICES section — full-width feature image above or between the cards:
+  <div class="services-visual" style="background-image:url('{imgs[1]}')" aria-hidden="true"></div>
+  CSS: .services-visual {{ width:100%; height:320px; border-radius:1.5rem; background-size:cover; background-position:center; background-color:{bg_color}; margin-bottom:3rem; }}
+
+③ ABOUT section decorative photo (one column, no text on top):
   <div class="about-photo" style="background-image:url('{imgs[2]}')" aria-hidden="true"></div>
   CSS: .about-photo {{ width:100%; height:480px; min-height:300px; border-radius:1.5rem; background-size:cover; background-position:center; background-color:#1a1a2e; }}
 
-CASE STUDY / RESULTS section visual:
-  <div class="case-visual" style="background-image:url('{imgs[5]}')" aria-hidden="true"></div>
+④ CTA / LEAD FORM section background (full section, dark overlay):
+  <section class="cta-section" style="background-image:url('{imgs[3]}')">
+  CSS: .cta-section {{ background-size:cover; background-position:center; background-color:{bg_color}; position:relative; }}
+  .cta-section::before {{ content:''; position:absolute; inset:0; background:rgba(0,0,0,0.72); z-index:0; }}
+  .cta-section > * {{ position:relative; z-index:1; }}
+
+⑤ RESULTS / METRICS section case image:
+  <div class="case-visual" style="background-image:url('{imgs[4]}')" aria-hidden="true"></div>
   CSS: .case-visual {{ width:100%; height:360px; min-height:200px; border-radius:1.5rem; background-size:cover; background-position:center; background-color:#1a1a2e; }}
+
+⑥ FAQ section accent photo (side column on desktop, hidden on mobile):
+  <div class="faq-visual" style="background-image:url('{imgs[5]}')" aria-hidden="true"></div>
+  CSS: .faq-visual {{ width:100%; height:100%; min-height:400px; border-radius:1.5rem; background-size:cover; background-position:center; background-color:#1a1a2e; }}
+  @media(max-width:768px) {{ .faq-visual {{ display:none; }} }}
+
+⑦ FOOTER background texture (subtle, low opacity):
+  <footer style="background-image:url('{imgs[6]}')">
+  CSS: footer {{ background-size:cover; background-position:center; background-color:{bg_color}; position:relative; }}
+  footer::before {{ content:''; position:absolute; inset:0; background:{bg_color}; opacity:0.93; z-index:0; }}
+  footer > * {{ position:relative; z-index:1; }}
+
+⑧ HERO secondary / floating card photo (decorative, absolute position over hero):
+  <div class="hero-card-photo" style="background-image:url('{imgs[7]}')" aria-hidden="true"></div>
+  CSS: .hero-card-photo {{ position:absolute; right:5%; bottom:10%; width:260px; height:180px; border-radius:1rem; background-size:cover; background-position:center; border:1px solid rgba(255,255,255,0.12); box-shadow:0 20px 60px rgba(0,0,0,0.4); }}
+  @media(max-width:900px) {{ .hero-card-photo {{ display:none; }} }}
 
 TESTIMONIAL AVATARS (circular img — these are REAL people photos, use them):
   <img src="{avatars[0]}" alt="Cliente" class="avatar">
@@ -681,7 +709,7 @@ TESTIMONIAL AVATARS (circular img — these are REAL people photos, use them):
 
 LOGO: {logo_tag}  ← use in navbar + footer only. Max height 40px.
 
-RULE: ONLY the 3 background-image divs + 3 avatar <img> + 1 logo = 7 image elements. Zero placeholder.com / picsum.
+RULE: Use ALL 8 stock photos above (① to ⑧). Zero placeholder.com / picsum. Zero unused photos.
 
 ━━━ SECTIONS (build ALL of these — use creative layouts, NOT identical grids) ━━━
 
@@ -748,19 +776,21 @@ RULE: ONLY the 3 background-image divs + 3 avatar <img> + 1 logo = 7 image eleme
    CRITICAL: DO NOT use <svg>, <path>, or any inline SVG here — text only. Section bg: slightly lighter than hero.
 
 4. ABOUT / WHY US
-   Asymmetric 2-col: photo div LEFT (about-photo), text RIGHT — or swap if that looks better for the brand.
-   Right col: h2, 3–4 bullet items each with SVG check icon, one highlighted metric box.
+   Asymmetric 2-col: photo div ③ (about-photo) on one side, text on the other.
+   Text col: h2, 3–4 bullet items each with SVG check icon, one highlighted metric box.
+   MANDATORY: include <div class="about-photo" style="background-image:url('{imgs[2]}')" aria-hidden="true"></div>
    Do NOT put text on top of the photo.
 
 5. SERVICES / FEATURES
-   3-col card grid (2-col on tablet, 1-col mobile).
+   MANDATORY: include <div class="services-visual" style="background-image:url('{imgs[1]}')" aria-hidden="true"></div> ABOVE the card grid.
+   Then: 3-col card grid (2-col on tablet, 1-col mobile).
    Each card: gradient icon box (52×52px, border-radius 14px) + meaningful SVG icon + title + body text.
    Card style: glass border, hover lifts + border glows with brand color.
-   NO photos inside cards — SVG icons only.
 
 6. RESULTS / METRICS
    Dark/contrast section (invert bg vs main).
    4 giant stat items: number (font-size 3.5–4.5rem, gradient text) + label.
+   MANDATORY: include <div class="case-visual" style="background-image:url('{imgs[4]}')" aria-hidden="true"></div>
    Below: one testimonial highlight card with avatar + quote.
 
 7. TESTIMONIALS
@@ -769,17 +799,19 @@ RULE: ONLY the 3 background-image divs + 3 avatar <img> + 1 logo = 7 image eleme
    Quotes should feel specific: results, percentages, time frames.
 
 8. CTA / LEAD FORM
-   High-contrast full-width section.
+   MANDATORY: <section class="cta-section" style="background-image:url('{imgs[3]}')"> with dark overlay ::before
    Left side: strong headline + 3 bullet benefits + trust signals.
    Right side: form — name, email, phone, empresa, select (como nos encontrou?) + submit button.
    Form MUST have id="leadForm". ALL inputs have name attribute.
    Below form: "🔒 Seus dados estão seguros. Sem spam."
 
 9. FAQ
+   2-col layout on desktop: questions accordion on LEFT, <div class="faq-visual" style="background-image:url('{imgs[5]}')" aria-hidden="true"></div> on RIGHT.
    4–6 questions in accordion (JS toggle). Questions address real B2B objections.
-   Clean expand/collapse animation.
+   @media(max-width:768px): hide .faq-visual, show only accordion.
 
 10. FOOTER
+    MANDATORY: <footer style="background-image:url('{imgs[6]}')"> with ::before overlay (opacity 0.93)
     3-col: logo + tagline + social icons | nav links | contact (CNPJ placeholder, address, email, phone).
 
 ━━━ CSS REQUIREMENTS (design these yourself — do NOT copy a generic template) ━━━
@@ -938,10 +970,15 @@ MANDATORY: The output MUST contain ALL of these in order:
 <footer> ... </footer>
 
 Style: dark premium, primary {primary_color}, font {font_name}
-Stock images for background-image only:
-  hero: {imgs[0]}
-  about: {imgs[2]}
-  case: {imgs[5]}
+Stock images — USE ALL as background-image (never raw <img> for these):
+  hero section: {imgs[0]}
+  services section (above cards): {imgs[1]}
+  about section photo: {imgs[2]}
+  cta-section background: {imgs[3]}
+  results/case visual: {imgs[4]}
+  faq section side photo: {imgs[5]}
+  footer background (with 0.93 opacity overlay): {imgs[6]}
+  hero floating card (absolute position, hidden on mobile): {imgs[7]}
 Testimonial avatars: {avatars[0]}, {avatars[1]}, {avatars[2]}
 Logo: {logo_tag}
 Lead form must have id="leadForm"
