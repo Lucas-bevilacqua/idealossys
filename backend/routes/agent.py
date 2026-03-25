@@ -122,35 +122,33 @@ def _is_confirmation(text: str) -> bool:
 
 def _has_pending_briefing(history: list) -> bool:
     """
-    Returns True if Hélio's last agent message in the recent history
-    looks like a clarification question (has '?' and is recent).
-    Only checks the last 4 messages to stay conservative.
+    Returns True if the most recent agent message in history is from Hélio
+    and contains at least one question mark (indicating a briefing/clarification).
+    Checks last 6 messages to catch recent exchanges.
     """
-    briefing_markers = [
-        "prosseguir", "confirmar", "manda o time", "mandar o time",
-        "é só confirmar", "posso começar", "pode começar", "vou acionar",
-        "pode ir", "me conta", "qual é o objetivo", "você tem algum",
-        "tem algum", "prefere", "o que você prefere",
-    ]
-    for msg in reversed(history[-4:]):
+    for msg in reversed(history[-6:]):
         if not isinstance(msg, dict):
             continue
-        sender_id = msg.get("senderId", "")
         role = msg.get("role", "")
+        sender_id = msg.get("senderId", "")
         sender_name = (msg.get("senderName") or "").lower()
         text = msg.get("text") or ""
+
+        # Skip user messages — keep looking for most recent agent message
+        if role == "user":
+            continue
+
+        # Most recent agent message found — check if it's Hélio asking a question
         is_helio = (
             sender_id == "ceo-ia"
-            or (role == "agent" and ("hélio" in sender_name or "helio" in sender_name))
+            or "hélio" in sender_name
+            or "helio" in sender_name
         )
-        if not is_helio:
-            continue
-        # Check explicit markers
-        if any(m in text.lower() for m in briefing_markers):
+        if is_helio and "?" in text:
             return True
-        # Check if Hélio's message has multiple questions (characteristic of briefing)
-        if text.count("?") >= 2:
-            return True
+        # If most recent agent is not Hélio (or no question), no pending briefing
+        return False
+
     return False
 
 
