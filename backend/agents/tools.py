@@ -626,7 +626,7 @@ REGRAS ABSOLUTAS:
             hero_text_color = "#ffffff"
             card_bg = "rgba(255,255,255,0.03)"
 
-        logo_tag = f'<img src="{logo_url}" alt="{company_name}" style="height:38px;object-fit:contain">' if logo_url else f'<span class="brand-name">{company_name}</span>'
+        logo_tag = f'<img src="{logo_url}" alt="{company_name}" class="navbar-logo-img" style="height:38px;max-width:160px;object-fit:contain;display:block">' if logo_url else f'<span class="brand-name" style="font-size:1.2rem;font-weight:800;color:var(--text)">{company_name}</span>'
 
         prompt = f"""You are a world-class creative frontend developer. Your task: produce a UNIQUE, STUNNING, CONVERSION-OPTIMIZED B2B landing page — single self-contained HTML file.
 
@@ -688,6 +688,36 @@ RULE: ONLY the 3 background-image divs + 3 avatar <img> + 1 logo = 7 image eleme
 1. NAVBAR
    Fixed, glass blur, logo left, nav links center/right, CTA button far right, hamburger for mobile.
    JS: id="hamburger" toggles id="navLinks" .open class. Scroll > 50px increases background opacity.
+   MANDATORY HTML structure:
+   <nav class="navbar">
+     <div class="navbar-inner">
+       <a class="navbar-logo" href="#">{logo_tag}</a>
+       <ul class="nav-links" id="navLinks">
+         <li><a href="#about">Sobre</a></li>
+         <li><a href="#services">Serviços</a></li>
+         <li><a href="#results">Resultados</a></li>
+         <li><a href="#faq">FAQ</a></li>
+       </ul>
+       <a href="#cta-section" class="btn btn-primary nav-cta">Falar com especialista</a>
+       <button class="hamburger" id="hamburger" aria-label="Menu">☰</button>
+     </div>
+   </nav>
+   MANDATORY CSS for navbar layout (logo MUST be separated from links by flex space-between):
+     .navbar {{ position:fixed; top:0; left:0; right:0; z-index:1000; backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); background:{navbar_bg}; border-bottom:1px solid var(--border); }}
+     .navbar-inner {{ display:flex; align-items:center; justify-content:space-between; gap:2rem; max-width:1200px; margin:0 auto; padding:0.875rem 2rem; }}
+     .navbar-logo {{ flex-shrink:0; text-decoration:none; display:flex; align-items:center; }}
+     .navbar-logo img {{ height:38px; max-width:160px; object-fit:contain; display:block; }}
+     .nav-links {{ display:flex; align-items:center; gap:2rem; list-style:none; margin:0; padding:0; flex:1; justify-content:center; }}
+     .nav-links a {{ text-decoration:none; color:var(--text-muted); font-size:0.9rem; font-weight:500; transition:color 0.2s; }}
+     .nav-links a:hover {{ color:var(--text); }}
+     .nav-cta {{ flex-shrink:0; }}
+     .hamburger {{ display:none; background:none; border:none; cursor:pointer; font-size:1.3rem; color:var(--text); padding:0.25rem; }}
+     @media(max-width:768px) {{
+       .nav-links {{ display:none; position:fixed; top:64px; left:0; right:0; background:{navbar_bg}; flex-direction:column; padding:1.5rem 2rem; gap:1.5rem; border-bottom:1px solid var(--border); backdrop-filter:blur(20px); }}
+       .nav-links.open {{ display:flex; }}
+       .nav-cta {{ display:none; }}
+       .hamburger {{ display:block; }}
+     }}
 
 2. HERO — full viewport, photo background + overlay
    Mandatory HTML: <section class="hero" style="background-image:url('{imgs[0]}')">
@@ -767,9 +797,12 @@ Use these tokens but CREATE unique styles around them:
   --radius-pill: 50px
   Font: '{font_name}', imported from Google Fonts
 
-Navbar:
-  position:fixed; backdrop-filter:blur(20px); background:{navbar_bg};
-  padding:0.875rem 2rem; border-bottom:1px solid var(--border);
+Navbar — use EXACTLY this CSS (do NOT override with custom styles):
+  .navbar {{ position:fixed; top:0; left:0; right:0; z-index:1000; backdrop-filter:blur(20px); background:{navbar_bg}; border-bottom:1px solid var(--border); }}
+  .navbar-inner {{ display:flex; align-items:center; justify-content:space-between; gap:2rem; max-width:1200px; margin:0 auto; padding:0.875rem 2rem; }}
+  .navbar-logo {{ flex-shrink:0; }}  ← logo is isolated on the LEFT, never touching links
+  .nav-links {{ flex:1; display:flex; justify-content:center; gap:2rem; list-style:none; }}  ← links CENTERED
+  .nav-cta {{ flex-shrink:0; }}  ← CTA button on the RIGHT
 
 Hero overlay (::before pseudo-element):
   background: {hero_overlay};
