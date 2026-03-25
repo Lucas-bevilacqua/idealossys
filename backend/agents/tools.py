@@ -813,6 +813,47 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',
             print(f"[LP] Generation failed: {err}")
             return f"❌ Falha ao gerar landing page: {err}. Tente novamente."
 
+        # Completeness check: count major structural sections
+        import re as _re2
+        section_tags = _re2.findall(r'<(?:section|footer|header|nav)\b', html_code, _re2.IGNORECASE)
+        form_count = html_code.lower().count('<form')
+        section_count = len(section_tags)
+        print(f"[LP] Completeness: {section_count} sections/header/footer/nav, {form_count} forms")
+        if section_count < 4:
+            # Retry once with a simplified prompt focused on completeness
+            print(f"[LP] Too few sections ({section_count}), retrying with completeness focus...")
+            retry_prompt = f"""You are a senior frontend developer. Generate a COMPLETE landing page HTML with ALL 10 sections.
+
+{context_block}
+
+MANDATORY: The output MUST contain ALL of these in order:
+<nav> ... </nav>
+<section class="hero"> ... </section>
+<section class="logo-bar"> ... </section>
+<section class="about"> ... </section>
+<section class="services"> ... </section>
+<section class="results"> ... </section>
+<section class="testimonials"> ... </section>
+<section class="cta-section"> ... </section>
+<section class="faq"> ... </section>
+<footer> ... </footer>
+
+Style: dark premium, primary {primary_color}, font {font_name}
+Stock images for background-image only:
+  hero: {imgs[0]}
+  about: {imgs[2]}
+  case: {imgs[5]}
+Testimonial avatars: {avatars[0]}, {avatars[1]}, {avatars[2]}
+Logo: {logo_tag}
+Lead form must have id="leadForm"
+Hamburger must have id="hamburger", nav links id="navLinks"
+Minimum 600 lines. Return ONLY HTML starting with <!DOCTYPE html>
+"""
+            html_code = await _gemini_generate(retry_prompt, timeout=300.0)
+            html_code = _strip_code_fences(html_code)
+            if html_code.startswith("<!--") or len(html_code) < 3000:
+                return f"❌ Falha ao gerar landing page (incompleta após retry). Tente novamente."
+
         # Post-generation validation + auto-fix (catches most common failure patterns)
         html_code = _validate_and_fix_html(
             html=html_code,

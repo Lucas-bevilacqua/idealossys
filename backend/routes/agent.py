@@ -401,10 +401,19 @@ async def _run_agent_job(job_id: str, tenant_id: str, full_prompt: str,
             except Exception as _e:
                 logger.debug("Non-critical error suppressed: %s", _e)
 
-        now_ms = int(time.time() * 1000)
-        _push(job, "done", {"text": "", "timestamp": now_ms})
-        job["done"] = True
-        job["notify"].set()
+        # CRITICAL: these 3 lines MUST always execute — wrap in separate try so
+        # any exception above never prevents the frontend from unblocking.
+        try:
+            now_ms = int(time.time() * 1000)
+            _push(job, "done", {"text": "", "timestamp": now_ms})
+        except Exception as _e:
+            logger.warning("Could not push done event: %s", _e)
+        finally:
+            job["done"] = True
+            try:
+                job["notify"].set()
+            except Exception:
+                pass
 
 
 # ── SSE reader helper ─────────────────────────────────────────────────────────
