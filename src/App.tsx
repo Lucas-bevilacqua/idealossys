@@ -329,7 +329,7 @@ const ChatInput = ({ onSendMessage, isListening, toggleVoice, voiceTranscript = 
           <button type="button" onClick={() => fileInputRef.current?.click()} className={`absolute ${showGlobe ? 'left-10' : 'left-3'} p-1.5 text-dim hover:text-accent`}><Paperclip size={18} /></button>
           {showGlobe && <Globe size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-accent opacity-50" />}
           <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*,.pdf,.txt,.js,.ts,.tsx,.css" />
-          <input value={isListening ? (voiceTranscript || 'Escutando...') : input} onChange={e => setInput(e.target.value)} placeholder={isListening ? 'Fale agora...' : (selectedFile ? 'Descreva o anexo...' : placeholder)} className={`flex-1 ${showGlobe ? 'pl-20' : 'pl-12'} pr-12 py-3 rounded-xl text-sm border focus:outline-none transition-all`} style={{ background: isListening ? '#3B82F610' : 'var(--bg)', borderColor: isListening ? '#3B82F6' : 'var(--border)', color: 'var(--text-main)' }} />
+          <input value={isListening ? (voiceTranscript || 'Escutando...') : input} onChange={e => setInput(e.target.value)} placeholder={isListening ? 'Fale agora...' : (selectedFile ? 'Descreva o anexo...' : placeholder)} className={`flex-1 ${showGlobe ? 'pl-16 md:pl-20' : 'pl-10 md:pl-12'} pr-12 py-3 rounded-xl text-sm border focus:outline-none transition-all`} style={{ background: isListening ? '#3B82F610' : 'var(--bg)', borderColor: isListening ? '#3B82F6' : 'var(--border)', color: 'var(--text-main)' }} />
           <button type="button" onClick={toggleVoice} className={`absolute right-3 p-1.5 transition-all ${isListening ? 'text-red-500 scale-125 bg-red-500/10 rounded-full ring-4 ring-red-500/20' : 'text-dim hover:text-accent'}`}>{isListening ? <MicOff size={18} /> : <Mic size={18} />}</button>
         </div>
         <button type="submit" className="px-4 py-3 rounded-lg text-white font-bold bg-accent"><Send size={16} /></button>
@@ -1100,11 +1100,11 @@ export default function App() {
 
         <main className="flex-1 overflow-auto relative pb-16 md:pb-0">
           {currentView === 'dashboard' && (
-            <div className="p-10 max-w-6xl mx-auto animate-fade-in flex flex-col gap-8">
+            <div className="p-4 md:p-10 max-w-6xl mx-auto animate-fade-in flex flex-col gap-6 md:gap-8">
               <div className="flex justify-between items-center">
-                <div><h2 className="text-3xl font-heading font-black text-main uppercase">{context.name}</h2><p className="text-[10px] label-mono text-dim tracking-widest uppercase">Centro de Operações Ativo</p></div>
+                <div><h2 className="text-xl md:text-3xl font-heading font-black text-main uppercase leading-tight">{context.name}</h2><p className="text-[10px] label-mono text-dim tracking-widest uppercase">Centro de Operações Ativo</p></div>
               </div>
-              <div className="premium-card p-8 bg-gradient-to-br from-accent/10 to-transparent border-accent/20">
+              <div className="premium-card p-4 md:p-8 bg-gradient-to-br from-accent/10 to-transparent border-accent/20">
                 <div className="flex items-center gap-3 mb-6"><Activity size={14} className="text-accent animate-pulse" /><span className="label-mono text-[10px] font-black uppercase text-accent tracking-[0.3em]">Comando Global OS Core</span></div>
                 
                 {/* Global Message History */}
@@ -1180,13 +1180,13 @@ export default function App() {
                 {execution.plan.length > 0 && (!execution.areaId || execution.areaId === 'global') && <AgentInteractionBlock execution={execution} isLive={isTyping} />}
                 <ChatInput onSendMessage={(text: string, _: any, att: any) => sendMessage(text, 'global', att)} isListening={isListening} toggleVoice={toggleVoiceCommand} voiceTranscript={voiceInput} placeholder="Dê uma ordem para sua empresa..." showGlobe />
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                 {AREAS.map(area => (
                   <motion.div
                     key={area.id}
                     onClick={() => area.unlocked && selectArea(area)}
                     whileHover={area.unlocked ? { y: -5 } : {}}
-                    className={`premium-card p-6 relative overflow-hidden ${area.unlocked ? 'cursor-pointer' : 'cursor-not-allowed opacity-50 grayscale'}`}
+                    className={`premium-card p-4 md:p-6 relative overflow-hidden ${area.unlocked ? 'cursor-pointer' : 'cursor-not-allowed opacity-50 grayscale'}`}
                   >
                     {!area.unlocked && (
                       <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-[2px] z-10 gap-2">
@@ -1395,12 +1395,12 @@ export default function App() {
 
           {currentView === 'chat' && selectedArea && (
             <div className="flex flex-col h-full bg-[#050505]">
-              <div className="flex items-center gap-3 px-6 py-4 border-b border-white/5 bg-white/[0.01]">
-                <button onClick={() => setCurrentView('dashboard')} className="p-1 text-dim hover:text-white transition-all"><ArrowLeft size={18} /></button>
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `${selectedArea.color}20` }}>{React.createElement(IconMap[selectedArea.icon] || Terminal, { size: 16, style: { color: selectedArea.color } })}</div>
-                <div><h3 className="font-bold text-sm text-main uppercase">{selectedArea.name}</h3><p className="text-[10px] label-mono text-dim">Unidade Operacional</p></div>
+              <div className="flex items-center gap-3 px-4 md:px-6 py-3 md:py-4 border-b border-white/5 bg-white/[0.01]">
+                <button onClick={() => setCurrentView('dashboard')} className="p-1 text-dim hover:text-white transition-all shrink-0"><ArrowLeft size={18} /></button>
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style={{ background: `${selectedArea.color}20` }}>{React.createElement(IconMap[selectedArea.icon] || Terminal, { size: 16, style: { color: selectedArea.color } })}</div>
+                <div className="min-w-0"><h3 className="font-bold text-sm text-main uppercase truncate">{selectedArea.name}</h3><p className="text-[10px] label-mono text-dim">Unidade Operacional</p></div>
               </div>
-              <div ref={scrollRef} className="flex-1 overflow-auto p-6 space-y-4">
+              <div ref={scrollRef} className="flex-1 overflow-auto p-3 md:p-6 space-y-4">
                 {(Array.isArray(messages[selectedArea.id]) ? messages[selectedArea.id] : []).map(m => {
                   const agentInfo = m.role === 'agent' ? getAgentInfo(m.senderId) : null;
 
@@ -1506,13 +1506,13 @@ export default function App() {
           )}
 
           {currentView === 'kanban' && (
-            <div className="p-6 h-full flex flex-col">
-              <div className="flex items-center justify-between mb-6">
+            <div className="p-3 md:p-6 h-full flex flex-col">
+              <div className="flex items-center justify-between mb-4 md:mb-6 gap-2 flex-wrap">
                 <div>
-                  <h2 className="text-xl font-heading font-black text-main uppercase tracking-tighter">Fluxo de Missão</h2>
+                  <h2 className="text-lg md:text-xl font-heading font-black text-main uppercase tracking-tighter">Fluxo de Missão</h2>
                   <p className="text-[10px] label-mono opacity-40 uppercase">Gerenciamento Neural de Tarefas</p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex gap-2 md:gap-3">
                   {tasks.some(t => t.status !== 'DONE') && (
                     <button onClick={resolveStuckTasks} className="flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest text-emerald-400 hover:bg-emerald-400/10 transition-all border border-emerald-400/20">
                       <CheckCircle2 size={14} /> Resolver Travadas
