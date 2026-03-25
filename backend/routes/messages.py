@@ -23,7 +23,7 @@ async def create_message_body(
         area_id=area_id,
         sender_id=payload.get("senderId", user["id"]),
         sender_name=payload.get("senderName", user["name"]),
-        text=payload.get("text", ""),
+        text_content=payload.get("text", ""),
         role=payload.get("role", "user"),
         artifact_id=payload.get("artifactId"),
     )
@@ -45,7 +45,7 @@ async def create_message(
         area_id=area_id,
         sender_id=user["id"],
         sender_name=user["name"],
-        text=message.text,
+        text_content=message.text,
         role=message.role,
         artifact_id=message.artifactId,
     )
