@@ -660,6 +660,55 @@ class Database:
                      "value": r[4], "confidence": r[5], "updated_at": r[6]}
                     for r in result.fetchall()]
 
+    # ============ Briefings ============
+
+    async def save_briefing(self, tenant_id: str, content: str,
+                            period_start: int, period_end: int,
+                            tasks_done: int = 0, artifacts_generated: int = 0,
+                            leads_added: int = 0) -> dict:
+        bid = str(uuid4())
+        now = int(time.time() * 1000)
+        async with engine.begin() as conn:
+            await conn.execute(text("""
+                INSERT INTO briefings
+                    (id, tenant_id, period_start, period_end, content,
+                     tasks_done, artifacts_generated, leads_added, created_at)
+                VALUES (:id, :tid, :ps, :pe, :content, :td, :ag, :la, :now)
+            """), {"id": bid, "tid": tenant_id, "ps": period_start, "pe": period_end,
+                   "content": content, "td": tasks_done, "ag": artifacts_generated,
+                   "la": leads_added, "now": now})
+        return {"id": bid, "tenant_id": tenant_id, "content": content, "created_at": now,
+                "tasks_done": tasks_done, "artifacts_generated": artifacts_generated,
+                "leads_added": leads_added}
+
+    async def get_latest_briefing(self, tenant_id: str) -> dict | None:
+        async with engine.connect() as conn:
+            result = await conn.execute(text("""
+                SELECT id, content, tasks_done, artifacts_generated, leads_added,
+                       period_start, period_end, created_at
+                FROM briefings WHERE tenant_id = :tid
+                ORDER BY created_at DESC LIMIT 1
+            """), {"tid": tenant_id})
+            row = result.fetchone()
+            if not row:
+                return None
+            return {"id": row[0], "content": row[1], "tasks_done": row[2],
+                    "artifacts_generated": row[3], "leads_added": row[4],
+                    "period_start": row[5], "period_end": row[6], "created_at": row[7]}
+
+    async def get_briefings(self, tenant_id: str, limit: int = 10) -> list:
+        async with engine.connect() as conn:
+            result = await conn.execute(text("""
+                SELECT id, tasks_done, artifacts_generated, leads_added,
+                       period_start, period_end, created_at,
+                       SUBSTR(content, 1, 200) as preview
+                FROM briefings WHERE tenant_id = :tid
+                ORDER BY created_at DESC LIMIT :limit
+            """), {"tid": tenant_id, "limit": limit})
+            return [{"id": r[0], "tasks_done": r[1], "artifacts_generated": r[2],
+                     "leads_added": r[3], "period_start": r[4], "period_end": r[5],
+                     "created_at": r[6], "preview": r[7]} for r in result.fetchall()]
+
     # ============ Artifact Versions (histórico de versões) ============
 
     async def save_artifact_version(self, artifact_id: str, tenant_id: str,

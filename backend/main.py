@@ -39,6 +39,7 @@ from .routes.project_infra import provision_router as infra_provision_router
 from .routes.project_infra import project_api_router as infra_api_router
 from .routes.publish import router as publish_router
 from .routes.sales import router as sales_router
+from .routes.briefing import router as briefing_router
 
 _is_dev = os.getenv("ENVIRONMENT", "development") == "development"
 
@@ -50,6 +51,7 @@ async def lifespan(app: FastAPI):
     await init_db()
     validate_secret_key()
     await _start_job_cleanup()
+    await _start_weekly_briefing()
     yield
 
 
@@ -137,6 +139,7 @@ app.include_router(infra_provision_router)
 app.include_router(infra_api_router)
 app.include_router(publish_router)
 app.include_router(sales_router)
+app.include_router(briefing_router)
 
 
 # ── Periodic job cleanup (iniciado pelo lifespan) ─────────────────────────────
@@ -149,6 +152,72 @@ async def _start_job_cleanup():
                 _cleanup_old_jobs()
             except Exception:
                 pass
+    asyncio.create_task(_loop())
+
+
+# ── Briefing Semanal Automático (domingo ~8h) ─────────────────────────────────
+async def _start_weekly_briefing():
+    """
+    Acorda todo domingo às 8h (horário do servidor) e gera briefing
+    para todos os tenants ativos. Usa verificação de "já gerei hoje"
+    para não duplicar caso o servidor reinicie no mesmo dia.
+    """
+    async def _loop():
+        import datetime
+        from .database.crud import Database
+        from .database.engine import engine
+        from sqlalchemy import text
+
+        _last_run_date: str = ""
+
+        while True:
+            await asyncio.sleep(3600)  # verifica a cada hora
+            try:
+                now = datetime.datetime.now()
+                today_str = now.strftime("%Y-%m-%d")
+                # Domingo = weekday 6, às 8h+
+                if now.weekday() != 6 or now.hour < 8:
+                    continue
+                if _last_run_date == today_str:
+                    continue  # já rodou hoje
+
+                _last_run_date = today_str
+
+                # Lista todos os tenants ativos
+                async with engine.connect() as conn:
+                    result = await conn.execute(text("SELECT id FROM tenants LIMIT 100"))
+                    tenant_ids = [r[0] for r in result.fetchall()]
+
+                from .routes.briefing import _generate_briefing_content
+                import time
+
+                week_ms = 7 * 24 * 60 * 60 * 1000
+                ts_now = int(time.time() * 1000)
+                period_start = ts_now - week_ms
+
+                db_inst = Database()
+                for tid in tenant_ids:
+                    try:
+                        data = await _generate_briefing_content(
+                            tenant_id=tid,
+                            period_start=period_start,
+                            period_end=ts_now,
+                        )
+                        await db_inst.save_briefing(
+                            tenant_id=tid,
+                            content=data["content"],
+                            period_start=period_start,
+                            period_end=ts_now,
+                            tasks_done=data["tasks_done"],
+                            artifacts_generated=data["artifacts_generated"],
+                            leads_added=data["leads_added"],
+                        )
+                        print(f"[BRIEFING] Gerado para tenant {tid}")
+                    except Exception as e:
+                        print(f"[BRIEFING] Erro para tenant {tid}: {e}")
+            except Exception as e:
+                print(f"[BRIEFING] Erro no loop: {e}")
+
     asyncio.create_task(_loop())
 
 

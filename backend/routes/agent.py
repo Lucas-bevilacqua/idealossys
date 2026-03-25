@@ -88,6 +88,12 @@ _CONFIRM_WORDS = [
     "prosseguir", "prossiga", "segue", "segue aí", "go", "bora", "vai",
     "execute", "executa", "começa", "começa aí", "manda ver", "pode executar",
     "tá bom", "ta bom", "certo", "exato", "isso mesmo", "perfeito",
+    "claro", "ótimo", "otimo", "show", "fechou", "beleza", "pode fazer",
+    "faz", "faz aí", "pode mandar", "manda", "siga", "siga em frente",
+    "pode continuar", "continua", "vamos", "vamos lá", "vamos la", "yep", "yes",
+    "affirmative", "agreed", "tudo certo", "tá ótimo", "ta otimo",
+    "gostei", "adorei", "parece bem", "parece ótimo", "pode ser",
+    "esse mesmo", "essa mesma", "exatamente", "correto", "positivo",
 ]
 
 
@@ -118,20 +124,58 @@ def _is_confirmation(text: str) -> bool:
 
 
 def _has_pending_briefing(history: list) -> bool:
-    briefing_markers = [
-        "posso prosseguir", "prosseguir", "confirmar",
-        "**📋", "**🎯", "tem algo que quer ajustar",
-        "manda o time", "mandar o time", "é só confirmar",
+    """
+    Returns True if Hélio (ceo-ia) recently sent a message that looks like
+    a clarification/briefing question — so the user's current reply should
+    trigger execution rather than another round of questions.
+
+    Strategy: look at the last 8 messages for a Hélio message that:
+    1. Contains question marks (perguntas de briefing), OR
+    2. Contains any of the loose trigger phrases, OR
+    3. Is a recent agent message from Hélio at all (most permissive fallback)
+    """
+    loose_markers = [
+        "prosseguir", "confirmar", "manda o time", "mandar o time",
+        "é só confirmar", "posso começar", "pode começar", "vou acionar",
+        "com isso", "me conta", "me diz", "qual é o", "você tem",
+        "já tem", "tem algum", "prefere", "objetivo",
     ]
-    for msg in reversed(history[-6:]):
+    helio_msgs_in_window = []
+    for msg in reversed(history[-8:]):
         if not isinstance(msg, dict):
             continue
         sender_id = msg.get("senderId", "")
         role = msg.get("role", "")
+        sender_name = msg.get("senderName", "").lower()
         text = msg.get("text") or ""
-        is_helio = sender_id == "ceo-ia" or (role == "agent" and "hélio" in msg.get("senderName", "").lower())
-        if is_helio and any(m in text for m in briefing_markers):
+        is_helio = (
+            sender_id == "ceo-ia"
+            or (role == "agent" and "hélio" in sender_name)
+            or (role == "agent" and "helio" in sender_name)
+        )
+        if not is_helio:
+            continue
+        helio_msgs_in_window.append(text)
+        # Strong markers — explicit briefing confirmed
+        strong = [
+            "prosseguir", "confirmar", "manda o time", "é só confirmar",
+            "posso começar", "vou acionar", "pode confirmar",
+        ]
+        if any(m in text.lower() for m in strong):
             return True
+        # Loose: Hélio message with questions → likely a briefing round
+        if "?" in text and any(m in text.lower() for m in loose_markers):
+            return True
+
+    # Most permissive fallback: if Hélio sent ANY message recently and the
+    # window has both a user creation request AND a Hélio reply, treat as briefing
+    if helio_msgs_in_window:
+        for msg in history[-8:]:
+            if not isinstance(msg, dict):
+                continue
+            if msg.get("role") == "user" and _is_creation_request(msg.get("text") or ""):
+                return True
+
     return False
 
 
@@ -599,6 +643,42 @@ async def agent_stream(request: Request, current_user: dict = Depends(get_curren
         if is_confirm and has_briefing:
             full_prompt = ("⚡ BRIEFING JÁ CONFIRMADO PELO USUÁRIO — EXECUTE O PIPELINE IMEDIATAMENTE. "
                            "NÃO APRESENTE NOVO BRIEFING. INICIE DIRETAMENTE A FASE 1 COM LUNA.\n\n") + full_prompt
+
+        # Briefing semanal on-demand — intercepta antes de despachar para o time
+        _BRIEFING_KW = [
+            "briefing", "resumo da semana", "resumo semanal", "o que foi feito",
+            "relatório da semana", "relatorio da semana", "o que aconteceu",
+            "balanço", "balanco", "status semanal", "recap", "recapitulação",
+        ]
+        if any(kw in user_input.lower() for kw in _BRIEFING_KW):
+            try:
+                from .briefing import _generate_briefing_content
+                bdata = await _generate_briefing_content(
+                    tenant_id=tenant_id,
+                    period_start=int(time.time() * 1000) - 7 * 24 * 60 * 60 * 1000,
+                    period_end=int(time.time() * 1000),
+                )
+                await db.save_briefing(
+                    tenant_id=tenant_id,
+                    content=bdata["content"],
+                    period_start=int(time.time() * 1000) - 7 * 24 * 60 * 60 * 1000,
+                    period_end=int(time.time() * 1000),
+                    tasks_done=bdata["tasks_done"],
+                    artifacts_generated=bdata["artifacts_generated"],
+                    leads_added=bdata["leads_added"],
+                )
+                now_ms_b = int(time.time() * 1000)
+                yield f"event: agent_start\ndata: {json.dumps({'agentId': 'ceo-ia', 'agentName': 'Hélio'})}\n\n"
+                yield f"event: agent_message\ndata: {json.dumps({'agentId': 'ceo-ia', 'agentName': 'Hélio', 'message': bdata['content']})}\n\n"
+                yield f"event: agent_done\ndata: {json.dumps({'agentId': 'ceo-ia', 'agentName': 'Hélio', 'output': bdata['content']})}\n\n"
+                yield f"event: done\ndata: {json.dumps({'text': '', 'timestamp': now_ms_b})}\n\n"
+                await db.create_message(tenant_id=tenant_id, area_id=area_name,
+                                        sender_id="ceo-ia", sender_name="Hélio",
+                                        text_content=bdata["content"], role="agent")
+                job["done"] = True
+                return
+            except Exception as _be:
+                logger.warning("Briefing on-demand falhou: %s — enviando para o time", _be)
 
         if is_creation and not has_briefing:
             briefing_text = await _gemini_briefing(company_ctx, user_input)

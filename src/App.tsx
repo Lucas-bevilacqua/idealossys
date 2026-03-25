@@ -399,6 +399,8 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [artifactVersions, setArtifactVersions] = useState<{ id: string; created_at: number; label: string; code_length: number }[]>([]);
   const [showVersionsPanel, setShowVersionsPanel] = useState(false);
+  const [briefing, setBriefing] = useState<{ content: string | null; tasks_done?: number; artifacts_generated?: number; leads_added?: number; created_at?: number } | null>(null);
+  const [briefingLoading, setBriefingLoading] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const globalScrollRef = useRef<HTMLDivElement>(null);
@@ -576,6 +578,10 @@ export default function App() {
     if (currentView === 'dashboard' && authState === 'app') {
       fetch('/api/messages/global').then(r => r.ok ? r.json() : []).then(d => {
         if (Array.isArray(d)) setMessages(p => ({ ...p, global: d }));
+      }).catch(() => {});
+      // Carrega último briefing salvo (sem gerar novo)
+      fetch('/api/briefing/latest').then(r => r.ok ? r.json() : null).then(d => {
+        if (d?.content) setBriefing(d);
       }).catch(() => {});
     }
   }, [currentView, authState]);
@@ -1222,6 +1228,59 @@ export default function App() {
                 {execution.plan.length > 0 && (!execution.areaId || execution.areaId === 'global') && <AgentInteractionBlock execution={execution} isLive={isTyping} onCancel={() => { setIsTyping(false); setExecution({ plan: [], agentStatus: {}, agentActions: {}, activeAgent: null, done: false }); clearActiveJobId(); }} />}
                 <ChatInput onSendMessage={(text: string, _: any, att: any) => sendMessage(text, 'global', att)} isListening={isListening} toggleVoice={toggleVoiceCommand} voiceTranscript={voiceInput} placeholder="Dê uma ordem para sua empresa..." showGlobe />
               </div>
+              {/* Briefing Semanal Widget */}
+              <div className="premium-card p-4 md:p-6 border-white/5">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-xl bg-accent/10 flex items-center justify-center"><FileCode size={14} className="text-accent" /></div>
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-accent">Briefing Semanal</p>
+                      {briefing?.created_at && <p className="text-[9px] text-dim/40 label-mono">{new Date(briefing.created_at).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })}</p>}
+                    </div>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      setBriefingLoading(true);
+                      try {
+                        const res = await fetch('/api/briefing').then(r => r.json());
+                        setBriefing(res);
+                      } finally {
+                        setBriefingLoading(false);
+                      }
+                    }}
+                    disabled={briefingLoading}
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 hover:bg-accent/20 text-accent text-[9px] font-black uppercase tracking-widest border border-accent/20 transition-all disabled:opacity-50"
+                  >
+                    {briefingLoading ? <><span className="w-3 h-3 rounded-full border-2 border-accent border-t-transparent animate-spin" /> Gerando...</> : <><History size={12} /> Gerar Briefing</>}
+                  </button>
+                </div>
+                {briefing?.content ? (
+                  <div>
+                    {briefing.tasks_done !== undefined && (
+                      <div className="flex gap-4 mb-4">
+                        <div className="text-center px-3 py-2 rounded-xl bg-white/[0.03] border border-white/5">
+                          <p className="text-lg font-black text-accent">{briefing.tasks_done}</p>
+                          <p className="text-[8px] label-mono text-dim/40 uppercase">Tasks</p>
+                        </div>
+                        <div className="text-center px-3 py-2 rounded-xl bg-white/[0.03] border border-white/5">
+                          <p className="text-lg font-black text-accent">{briefing.artifacts_generated}</p>
+                          <p className="text-[8px] label-mono text-dim/40 uppercase">Artefatos</p>
+                        </div>
+                        <div className="text-center px-3 py-2 rounded-xl bg-white/[0.03] border border-white/5">
+                          <p className="text-lg font-black text-accent">{briefing.leads_added}</p>
+                          <p className="text-[8px] label-mono text-dim/40 uppercase">Leads</p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="text-[11px] text-dim/80 leading-relaxed max-h-48 overflow-y-auto pr-1 scrollbar-hide">
+                      <Markdown components={mdComponents}>{briefing.content}</Markdown>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-[11px] text-dim/40 italic">Clique em "Gerar Briefing" para receber o resumo semanal do seu OS. Gerado automaticamente todo domingo às 8h.</p>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                 {AREAS.map(area => (
                   <motion.div

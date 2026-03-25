@@ -302,6 +302,21 @@ async def init_db() -> None:
             )
         """))
 
+        await conn.execute(text("""
+            CREATE TABLE IF NOT EXISTS briefings (
+                id TEXT PRIMARY KEY,
+                tenant_id TEXT NOT NULL,
+                period_start INTEGER,
+                period_end INTEGER,
+                content TEXT NOT NULL,
+                tasks_done INTEGER DEFAULT 0,
+                artifacts_generated INTEGER DEFAULT 0,
+                leads_added INTEGER DEFAULT 0,
+                created_at INTEGER
+            )
+        """))
+
+        await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_briefings_tenant ON briefings(tenant_id, created_at)"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_inter_bu_tasks_tenant ON inter_bu_tasks(tenant_id)"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_inter_bu_tasks_status ON inter_bu_tasks(tenant_id, status)"))
         await conn.execute(text("CREATE INDEX IF NOT EXISTS idx_bu_memory_tenant ON bu_memory(tenant_id, category)"))
