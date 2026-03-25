@@ -84,16 +84,13 @@ _EDIT_KEYWORDS = [
     "fix", "bugado", "bug", "erro no", "problema no", "não funciona", "quebrado",
 ]
 _CONFIRM_WORDS = [
-    "sim", "ok", "pode", "pode ir", "pode seguir", "confirmo", "confirmado",
-    "prosseguir", "prossiga", "segue", "segue aí", "go", "bora", "vai",
-    "execute", "executa", "começa", "começa aí", "manda ver", "pode executar",
-    "tá bom", "ta bom", "certo", "exato", "isso mesmo", "perfeito",
-    "claro", "ótimo", "otimo", "show", "fechou", "beleza", "pode fazer",
-    "faz", "faz aí", "pode mandar", "manda", "siga", "siga em frente",
-    "pode continuar", "continua", "vamos", "vamos lá", "vamos la", "yep", "yes",
-    "affirmative", "agreed", "tudo certo", "tá ótimo", "ta otimo",
-    "gostei", "adorei", "parece bem", "parece ótimo", "pode ser",
-    "esse mesmo", "essa mesma", "exatamente", "correto", "positivo",
+    "sim", "ok", "pode ir", "pode seguir", "confirmo", "confirmado",
+    "prosseguir", "prossiga", "segue aí", "go", "bora",
+    "execute", "executa", "começa aí", "manda ver", "pode executar",
+    "tá bom", "ta bom", "isso mesmo", "perfeito",
+    "ótimo", "otimo", "show", "fechou", "beleza",
+    "siga em frente", "vamos lá", "vamos la", "yep", "yes",
+    "tudo certo", "exatamente", "pode fazer isso", "faz isso",
 ]
 
 
@@ -125,57 +122,35 @@ def _is_confirmation(text: str) -> bool:
 
 def _has_pending_briefing(history: list) -> bool:
     """
-    Returns True if Hélio (ceo-ia) recently sent a message that looks like
-    a clarification/briefing question — so the user's current reply should
-    trigger execution rather than another round of questions.
-
-    Strategy: look at the last 8 messages for a Hélio message that:
-    1. Contains question marks (perguntas de briefing), OR
-    2. Contains any of the loose trigger phrases, OR
-    3. Is a recent agent message from Hélio at all (most permissive fallback)
+    Returns True if Hélio's last agent message in the recent history
+    looks like a clarification question (has '?' and is recent).
+    Only checks the last 4 messages to stay conservative.
     """
-    loose_markers = [
+    briefing_markers = [
         "prosseguir", "confirmar", "manda o time", "mandar o time",
         "é só confirmar", "posso começar", "pode começar", "vou acionar",
-        "com isso", "me conta", "me diz", "qual é o", "você tem",
-        "já tem", "tem algum", "prefere", "objetivo",
+        "pode ir", "me conta", "qual é o objetivo", "você tem algum",
+        "tem algum", "prefere", "o que você prefere",
     ]
-    helio_msgs_in_window = []
-    for msg in reversed(history[-8:]):
+    for msg in reversed(history[-4:]):
         if not isinstance(msg, dict):
             continue
         sender_id = msg.get("senderId", "")
         role = msg.get("role", "")
-        sender_name = msg.get("senderName", "").lower()
+        sender_name = (msg.get("senderName") or "").lower()
         text = msg.get("text") or ""
         is_helio = (
             sender_id == "ceo-ia"
-            or (role == "agent" and "hélio" in sender_name)
-            or (role == "agent" and "helio" in sender_name)
+            or (role == "agent" and ("hélio" in sender_name or "helio" in sender_name))
         )
         if not is_helio:
             continue
-        helio_msgs_in_window.append(text)
-        # Strong markers — explicit briefing confirmed
-        strong = [
-            "prosseguir", "confirmar", "manda o time", "é só confirmar",
-            "posso começar", "vou acionar", "pode confirmar",
-        ]
-        if any(m in text.lower() for m in strong):
+        # Check explicit markers
+        if any(m in text.lower() for m in briefing_markers):
             return True
-        # Loose: Hélio message with questions → likely a briefing round
-        if "?" in text and any(m in text.lower() for m in loose_markers):
+        # Check if Hélio's message has multiple questions (characteristic of briefing)
+        if text.count("?") >= 2:
             return True
-
-    # Most permissive fallback: if Hélio sent ANY message recently and the
-    # window has both a user creation request AND a Hélio reply, treat as briefing
-    if helio_msgs_in_window:
-        for msg in history[-8:]:
-            if not isinstance(msg, dict):
-                continue
-            if msg.get("role") == "user" and _is_creation_request(msg.get("text") or ""):
-                return True
-
     return False
 
 
