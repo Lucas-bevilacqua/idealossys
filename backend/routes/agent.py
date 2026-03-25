@@ -316,7 +316,7 @@ async def _run_agent_job(job_id: str, tenant_id: str, full_prompt: str,
                         try:
                             await db.create_message(tenant_id=tenant_id, area_id=area_name,
                                                     sender_id=fe_id, sender_name=display_name,
-                                                    text=content, role="agent")
+                                                    text_content=content, role="agent")
                         except Exception as _e:
                             logger.debug("Non-critical error suppressed: %s", _e)
                     try:
@@ -345,7 +345,7 @@ async def _run_agent_job(job_id: str, tenant_id: str, full_prompt: str,
                         try:
                             await db.create_message(tenant_id=tenant_id, area_id=area_name,
                                                     sender_id="ceo-ia", sender_name="Hélio",
-                                                    text=content, role="agent")
+                                                    text_content=content, role="agent")
                         except Exception as _e:
                             logger.debug("Non-critical error suppressed: %s", _e)
                         try:
@@ -368,7 +368,7 @@ async def _run_agent_job(job_id: str, tenant_id: str, full_prompt: str,
             try:
                 await db.create_message(tenant_id=tenant_id, area_id=area_name,
                                         sender_id="ceo-ia", sender_name="Hélio",
-                                        text=content, role="agent")
+                                        text_content=content, role="agent")
             except Exception as _e:
                 logger.debug("Non-critical error suppressed: %s", _e)
 
@@ -480,7 +480,7 @@ async def agent_stream(request: Request, current_user: dict = Depends(get_curren
 
         await db.create_message(tenant_id=tenant_id, area_id=area_name,
                                 sender_id=user["id"], sender_name=user["name"],
-                                text=user_input, role="user")
+                                text_content=user_input, role="user")
 
         # Build company context
         tenant = await db.get_tenant(tenant_id)
@@ -531,7 +531,7 @@ async def agent_stream(request: Request, current_user: dict = Depends(get_curren
             yield f"event: done\ndata: {json.dumps({'text': '', 'timestamp': now_ms2})}\n\n"
             await db.create_message(tenant_id=tenant_id, area_id=area_name,
                                     sender_id="ceo-ia", sender_name="Hélio",
-                                    text=briefing_text, role="agent")
+                                    text_content=briefing_text, role="agent")
             job["done"] = True
             return
 
