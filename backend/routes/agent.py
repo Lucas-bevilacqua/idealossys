@@ -292,7 +292,7 @@ Com essas respostas, posso prosseguir e mandar o time criar algo certeiro. É s�
 # ── Background agent runner ──────────────────────────────────────────────────
 
 async def _run_agent_job(job_id: str, tenant_id: str, full_prompt: str,
-                         area_name: str, created_task_ids: list):
+                         area_name: str, created_task_ids: list, user_input: str = ""):
     """Run the Agno team in background. Pushes all events to job store.
     Keeps running even if the SSE client disconnects."""
     job = _jobs.get(job_id)
@@ -675,7 +675,7 @@ async def agent_stream(request: Request, current_user: dict = Depends(get_curren
         # Launch agent as independent background task
         created_task_ids: list = []
         bg_task = asyncio.create_task(
-            _run_agent_job(job_id, tenant_id, full_prompt, area_name, created_task_ids)
+            _run_agent_job(job_id, tenant_id, full_prompt, area_name, created_task_ids, user_input)
         )
         job["task"] = bg_task
 
