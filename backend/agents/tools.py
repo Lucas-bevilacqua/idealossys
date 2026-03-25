@@ -783,13 +783,18 @@ document.querySelectorAll('a[href^="#"]').forEach(a=>a.addEventListener('click',
 9.  Hero photo: ALWAYS background-image on section element, NEVER raw <img> behind text
 10. .hero::before creates overlay — ZERO extra overlay divs, ZERO extra dark layers
 11. Feature cards: SVG icons ONLY — no photos inside cards
-12. Buttons: display:inline-flex — never display:block inside a flex row
+12. Buttons — MANDATORY CSS for every button/CTA:
+    display:inline-flex; align-items:center; justify-content:center; gap:0.5rem;
+    padding:0.875rem 2rem; border-radius:50px; font-weight:600; cursor:pointer;
+    white-space:nowrap; text-decoration:none;
+    NEVER use display:block or display:inline-block on CTAs. NEVER forget padding.
 13. id="hamburger", id="navLinks", id="leadForm" — all three REQUIRED
 14. ALL CSS in <style> tag — only Google Fonts @import allowed as external resource
 15. Apply class="fade-in" to cards, stat items, testimonials, section headings
 16. Add data-target="NUMBER" to each stat number element (for counter animation)
-17. ZERO placeholder.com / picsum.photos / invented image URLs
-18. Minimum 800 lines. Return ONLY complete HTML from <!DOCTYPE html> — zero markdown
+17. ZERO placeholder.com / picsum.photos / invented image URLs — ONLY the URLs provided above
+18. For <img> tags (avatars, logo): always add onerror="this.style.visibility='hidden'"
+19. Minimum 800 lines. Return ONLY complete HTML from <!DOCTYPE html> — zero markdown
 """
 
         html_code = await _gemini_generate(prompt, timeout=360.0)

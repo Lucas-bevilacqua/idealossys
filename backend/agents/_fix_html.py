@@ -77,6 +77,49 @@ def validate_and_fix_html(html: str, **_kwargs) -> str:
         html = html.replace('</style>', mobile_css + '\n  </style>', 1)
         fixes.append("@media-768px")
 
+    # ── 6. Protect <img> tags from showing broken-image icon ─────────────────
+    # Add onerror handler that hides the element if the image fails to load.
+    # Also remove clearly broken URLs (placeholder.com, picsum, empty src, blob:).
+    def _fix_img(m: re.Match) -> str:
+        tag = m.group(0)
+        # Remove known placeholder/broken domains
+        if re.search(r'src=["\'](?:https?://(?:via\.placeholder|placeholder|picsum|lorempixel|dummyimage|fakeimg)[^"\']*|blob:[^"\']*|data:)["\']', tag):
+            # Replace src with empty and hide — background-color fallback handles display
+            tag = re.sub(r'src=["\'][^"\']*["\']', 'src="" style="display:none"', tag)
+            fixes.append("broken-img-hidden")
+        # Add onerror to every remaining img that doesn't already have one
+        if 'onerror' not in tag:
+            tag = tag.rstrip('/>').rstrip() + ' onerror="this.style.visibility=\'hidden\';this.style.width=\'0\';this.style.height=\'0\'">'
+            fixes.append("img-onerror")
+        return tag
+    html = re.sub(r'<img\b[^>]*>', _fix_img, html)
+
+    # ── 7. Inject button base CSS ─────────────────────────────────────────────
+    btn_css = (
+        "\n    /* ── Button base fix (deterministic) ── */\n"
+        "    .btn, .cta-btn, .hero-btn, .btn-primary, .btn-secondary,\n"
+        "    button[type=submit], a.btn, a[class*='btn'], button[class*='btn'] {\n"
+        "      display: inline-flex !important;\n"
+        "      align-items: center !important;\n"
+        "      justify-content: center !important;\n"
+        "      gap: 0.5rem;\n"
+        "      padding: 0.875rem 2rem !important;\n"
+        "      border-radius: var(--radius-pill, 50px);\n"
+        "      font-weight: 600;\n"
+        "      white-space: nowrap;\n"
+        "      cursor: pointer;\n"
+        "      text-decoration: none;\n"
+        "      transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;\n"
+        "    }\n"
+        "    .btn:hover, .cta-btn:hover, .btn-primary:hover, .btn-secondary:hover,\n"
+        "    button[type=submit]:hover, a.btn:hover, a[class*='btn']:hover, button[class*='btn']:hover {\n"
+        "      transform: translateY(-2px);\n"
+        "    }\n"
+    )
+    if "Button base fix" not in html:
+        html = html.replace('</style>', btn_css + '  </style>', 1)
+        fixes.append("btn-base-css")
+
     if fixes:
         print(f"[VALIDATE] Python fixes applied: {', '.join(fixes)}")
     else:
